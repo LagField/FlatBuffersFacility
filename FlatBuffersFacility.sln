@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlatBuffersFacility", "FlatBuffersFacility\FlatBuffersFacility\FlatBuffersFacility.csproj", "{103098A1-9587-47E2-AB77-3B47316101C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlatBuffersFacility.Desktop", "FlatBuffersFacility\FlatBuffersFacility.Desktop\FlatBuffersFacility.Desktop.csproj", "{F430F065-FB35-4AB9-9C33-2F5AABEB1690}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{103098A1-9587-47E2-AB77-3B47316101C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{103098A1-9587-47E2-AB77-3B47316101C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{103098A1-9587-47E2-AB77-3B47316101C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{103098A1-9587-47E2-AB77-3B47316101C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F430F065-FB35-4AB9-9C33-2F5AABEB1690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F430F065-FB35-4AB9-9C33-2F5AABEB1690}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F430F065-FB35-4AB9-9C33-2F5AABEB1690}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F430F065-FB35-4AB9-9C33-2F5AABEB1690}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
