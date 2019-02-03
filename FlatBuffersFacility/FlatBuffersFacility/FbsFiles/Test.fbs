@@ -1,7 +1,8 @@
-namespace FlatBuffersFacility;
+namespace TestNameSpace  ;
+table SimpleEnemy  {    id : double ;    name:[ string ];}
 
-table Enemy{
-    id:int;
+table _Enemy  {
+    id:int32;
     name:string;
     isLock:bool;
     hp:float;

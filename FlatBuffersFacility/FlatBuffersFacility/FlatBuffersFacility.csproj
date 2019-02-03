@@ -17,6 +17,7 @@
     <ItemGroup>
       <Folder Include="FlatBuffersSrc" />
       <Folder Include="GenerateCode" />
+      <Folder Include="GenerateCode\TestNameSpace" />
     </ItemGroup>
 
 </Project>
