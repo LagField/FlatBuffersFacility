@@ -14,4 +14,9 @@
         <PackageReference Include="Eto.Forms" Version="2.4.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="FlatBuffersSrc" />
+      <Folder Include="GenerateCode" />
+    </ItemGroup>
+
 </Project>

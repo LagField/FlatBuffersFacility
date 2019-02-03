@@ -1,0 +1,9 @@
+namespace FlatBuffersFacility;
+
+table Enemy{
+    id:int;
+    name:string;
+    isLock:bool;
+    hp:float;
+    inventoryIds:[int];
+}

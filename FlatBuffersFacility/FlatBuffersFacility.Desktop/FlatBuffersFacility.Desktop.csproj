@@ -3,6 +3,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net461</TargetFramework>
+        <!--<TargetFramework>netstandard1.6</TargetFramework>-->
     </PropertyGroup>
 
     <ItemGroup>
