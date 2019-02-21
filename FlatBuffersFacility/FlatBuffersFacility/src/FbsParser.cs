@@ -26,7 +26,7 @@ namespace FlatBuffersFacility.Parser
                 {
                     ParseNamespace(lines[currentLineNum], ref currentLineNum, ref fbsStructure);
                 }
-                
+
                 ParseObject(lines, ref currentLineNum, ref tableStructureList);
             }
 
@@ -68,10 +68,19 @@ namespace FlatBuffersFacility.Parser
         {
             string line = lines[currentLineNum];
             //todo 支持struct类型
-            if (line.Contains("table"))
+            const string tablePattern = @" *table *[a-zA-Z_+][a-zA-Z0-9_]+ *";
+//            const string structPattern = @" *struct *[a-zA-Z_+][a-zA-Z0-9_]+ *";
+            MatchCollection tableMatchCollection = Regex.Matches(line, tablePattern);
+//            MatchCollection structMatchCollection = Regex.Matches(line, structPattern);
+            if (tableMatchCollection.Count == 1)
             {
-                int indexOfLeftCurlyBracket = line.IndexOf("{", StringComparison.Ordinal);
-                string objectName = line.Slice(0, indexOfLeftCurlyBracket);
+                string objectName = line;
+                if (line.Contains("{"))
+                {
+                    int indexOfLeftCurlyBracket = line.IndexOf("{", StringComparison.Ordinal);
+                    objectName = line.Slice(0, indexOfLeftCurlyBracket);
+                }
+
                 objectName = objectName.Replace("table", "").Replace(" ", "").Replace("{", "");
 
                 TableStructure newTableStructure = new TableStructure {tableName = objectName};
@@ -114,7 +123,7 @@ namespace FlatBuffersFacility.Parser
                         tableStructure.fieldInfos = fieldInfoList.ToArray();
                         return;
                     }
-                    
+
                     currentLineNum++;
                     continue;
                 }

@@ -1,7 +1,7 @@
 namespace TestNameSpace  ;
-table SimpleEnemy  {    id : double ;    name:[ string ];}
 
-table _Enemy  {
+  table Enemy  
+{
     id:int32;
     name:string;
     isLock:bool;
