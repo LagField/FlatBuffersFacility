@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlatBuffersFacility.Desktop
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "FlatBuffersFacility\Test\Test.csproj", "{7F67093D-BB97-43A1-B885-5B9056D6D582}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runtime", "FlatBuffersFacility\Runtime\Runtime.csproj", "{6778ABB3-8212-40BD-97F7-4C703353ADD2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{7F67093D-BB97-43A1-B885-5B9056D6D582}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F67093D-BB97-43A1-B885-5B9056D6D582}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F67093D-BB97-43A1-B885-5B9056D6D582}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6778ABB3-8212-40BD-97F7-4C703353ADD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6778ABB3-8212-40BD-97F7-4C703353ADD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6778ABB3-8212-40BD-97F7-4C703353ADD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6778ABB3-8212-40BD-97F7-4C703353ADD2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

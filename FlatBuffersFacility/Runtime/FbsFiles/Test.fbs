@@ -7,4 +7,10 @@ namespace TestNameSpace  ;
     isLock:bool;
     hp:float;
     inventoryIds:[int];
+    drivenCar:Car;
+}
+
+table Car{
+    id:int32;
+    speed:float;
 }

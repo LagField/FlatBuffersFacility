@@ -8,7 +8,7 @@ namespace Test
     {
         public static void Main(string[] args)
         {
-            const string testFilePath = @"D:\CSharpProjects\FlatBuffersFacility\FlatBuffersFacility\FbsFiles\Test.fbs";
+            const string testFilePath = @"D:\CSharpProjects\FlatBuffersFacility\Runtime\FbsFiles\Test.fbs";
             if (!File.Exists(testFilePath))
             {
                 Debug.WriteLine($"找不到文件{testFilePath}");

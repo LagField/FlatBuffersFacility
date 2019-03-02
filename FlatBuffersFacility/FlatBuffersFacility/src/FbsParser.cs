@@ -137,13 +137,14 @@ namespace FlatBuffersFacility.Parser
 
                     string[] spliteStrings = matchString.Split(':');
                     string fieldName = spliteStrings[0];
-                    string typeName = spliteStrings[1];
+                    string typeName = spliteStrings[1].ToLower();
 
                     TableFieldInfo newFieldInfo = new TableFieldInfo
                     {
                         fieldName = fieldName,
                         fieldTypeName = typeName,
                         isArray = false,
+                        isScalarType = CheckFlatbuffersTypeIsScalarType(typeName),
                         upperCamelCaseFieldName = ConvertToUpperCamelCase(fieldName),
                         fieldCSharpTypeName = ConvertToCSharpTypeName(typeName)
                     };
@@ -203,9 +204,37 @@ namespace FlatBuffersFacility.Parser
             {"float64", "double"},
         };
 
+        private HashSet<string> scalarTypeNameSet = new HashSet<string>
+        {
+            "byte",
+            "int8",
+            "ubyte",
+            "uint8",
+            "bool",
+            "short",
+            "int16",
+            "int",
+            "int32",
+            "uint",
+            "uint32",
+            "float",
+            "float32",
+            "long",
+            "int64",
+            "ulong",
+            "uint64",
+            "double",
+            "float64"
+        };
+
         private string ConvertToCSharpTypeName(string originName)
         {
             return !csharpTypeNameConvertDic.TryGetValue(originName, out string typeName) ? originName : typeName;
+        }
+
+        private bool CheckFlatbuffersTypeIsScalarType(string typeName)
+        {
+            return scalarTypeNameSet.Contains(typeName);
         }
 
         private string ConvertToUpperCamelCase(string originName)
@@ -288,6 +317,12 @@ namespace FlatBuffersFacility.Parser
         public string fieldTypeName;
         public string fieldCSharpTypeName;
         public bool isArray;
+        public bool isScalarType;
+
+        public bool IsString
+        {
+            get { return fieldCSharpTypeName == "string"; }
+        }
 
         public override string ToString()
         {
