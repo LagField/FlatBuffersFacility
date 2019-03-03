@@ -80,7 +80,8 @@ namespace FlatBuffersFacility
         {
             StringBuilder cmdStringBuilder = new StringBuilder();
             //flatbuffers compiler生成的文件放到FlatbuffersCompilerGenerated子文件夹中
-            cmdStringBuilder.Append($"/C {AppData.CompilerPath} --csharp --gen-onefile -o {AppData.CsOutputDirectory}\\FlatbuffersCompilerGenerated ");
+            cmdStringBuilder.Append(
+                $"/C {AppData.CompilerPath} --csharp --gen-onefile -o {AppData.CsOutputDirectory}\\FlatbuffersCompilerGenerated ");
             for (int i = 0; i < selectFbsFileNames.Length; i++)
             {
                 string fileName = selectFbsFileNames[i];
@@ -166,7 +167,7 @@ namespace FlatBuffersFacility
                 //write classes
                 for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
                 {
-                    WriteClassCode(fbsStruct.tableStructures[j]);
+                    WriteClassCode(fbsStruct.tableStructures[j], fbsStruct.namespaceName);
                     formatWriter.NewLine();
                 }
 
@@ -178,7 +179,7 @@ namespace FlatBuffersFacility
             }
         }
 
-        private static void WriteClassCode(TableStructure tableStructure)
+        private static void WriteClassCode(TableStructure tableStructure, string fbsNameSpace)
         {
             formatWriter.WriteLine($"public class {tableStructure.tableName}");
             formatWriter.BeginBlock();
@@ -186,21 +187,29 @@ namespace FlatBuffersFacility
             for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
             {
                 TableFieldInfo structFieldInfo = tableStructure.fieldInfos[i];
-                WriteFieldCode(structFieldInfo);
+                WriteFieldCode(structFieldInfo, fbsNameSpace);
             }
 
             formatWriter.EndBlock();
         }
 
-        private static void WriteFieldCode(TableFieldInfo structFieldInfo)
+        private static void WriteFieldCode(TableFieldInfo structFieldInfo, string fbsNameSpace)
         {
             if (structFieldInfo.isArray)
             {
                 formatWriter.WriteLine($"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName};");
-                if (structFieldInfo.isScalarType)
+                if (!structFieldInfo.isScalarType)
                 {
-                    formatWriter.WriteLine(
-                        $"private List<Offset<{structFieldInfo.fieldCSharpTypeName}>> {structFieldInfo.fieldName}OffsetList;");
+                    if (structFieldInfo.IsString)
+                    {
+                        formatWriter.WriteLine(
+                            $"private List<StringOffset> {structFieldInfo.fieldName}OffsetList = new List<StringOffset>();");
+                    }
+                    else
+                    {
+                        formatWriter.WriteLine(
+                            $"private List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>> {structFieldInfo.fieldName}OffsetList = new List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>>();");
+                    }
                 }
             }
             else

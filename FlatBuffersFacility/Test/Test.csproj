@@ -46,6 +46,10 @@
         <Project>{103098a1-9587-47e2-ab77-3b47316101c4}</Project>
         <Name>FlatBuffersFacility</Name>
       </ProjectReference>
+      <ProjectReference Include="..\Runtime\Runtime.csproj">
+        <Project>{6778abb3-8212-40bd-97f7-4c703353add2}</Project>
+        <Name>Runtime</Name>
+      </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

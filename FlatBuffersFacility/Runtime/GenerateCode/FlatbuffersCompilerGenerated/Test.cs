@@ -36,6 +36,10 @@ public struct Enemy : IFlatbufferObject
 #endif
   public int[] GetInventoryIdsArray() { return __p.__vector_as_array<int>(12); }
   public Car? DrivenCar { get { int o = __p.__offset(14); return o != 0 ? (Car?)(new Car()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
+  public Car? OwnCars(int j) { int o = __p.__offset(16); return o != 0 ? (Car?)(new Car()).__assign(__p.__indirect(__p.__vector(o) + j * 4), __p.bb) : null; }
+  public int OwnCarsLength { get { int o = __p.__offset(16); return o != 0 ? __p.__vector_len(o) : 0; } }
+  public string AllNames(int j) { int o = __p.__offset(18); return o != 0 ? __p.__string(__p.__vector(o) + j * 4) : null; }
+  public int AllNamesLength { get { int o = __p.__offset(18); return o != 0 ? __p.__vector_len(o) : 0; } }
 
   public static Offset<Enemy> CreateEnemy(FlatBufferBuilder builder,
       int id = 0,
@@ -43,8 +47,12 @@ public struct Enemy : IFlatbufferObject
       bool isLock = false,
       float hp = 0.0f,
       VectorOffset inventoryIdsOffset = default(VectorOffset),
-      Offset<Car> drivenCarOffset = default(Offset<Car>)) {
-    builder.StartObject(6);
+      Offset<Car> drivenCarOffset = default(Offset<Car>),
+      VectorOffset ownCarsOffset = default(VectorOffset),
+      VectorOffset all_namesOffset = default(VectorOffset)) {
+    builder.StartObject(8);
+    Enemy.AddAllNames(builder, all_namesOffset);
+    Enemy.AddOwnCars(builder, ownCarsOffset);
     Enemy.AddDrivenCar(builder, drivenCarOffset);
     Enemy.AddInventoryIds(builder, inventoryIdsOffset);
     Enemy.AddHp(builder, hp);
@@ -54,7 +62,7 @@ public struct Enemy : IFlatbufferObject
     return Enemy.EndEnemy(builder);
   }
 
-  public static void StartEnemy(FlatBufferBuilder builder) { builder.StartObject(6); }
+  public static void StartEnemy(FlatBufferBuilder builder) { builder.StartObject(8); }
   public static void AddId(FlatBufferBuilder builder, int id) { builder.AddInt(0, id, 0); }
   public static void AddName(FlatBufferBuilder builder, StringOffset nameOffset) { builder.AddOffset(1, nameOffset.Value, 0); }
   public static void AddIsLock(FlatBufferBuilder builder, bool isLock) { builder.AddBool(2, isLock, false); }
@@ -64,6 +72,14 @@ public struct Enemy : IFlatbufferObject
   public static VectorOffset CreateInventoryIdsVectorBlock(FlatBufferBuilder builder, int[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
   public static void StartInventoryIdsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static void AddDrivenCar(FlatBufferBuilder builder, Offset<Car> drivenCarOffset) { builder.AddOffset(5, drivenCarOffset.Value, 0); }
+  public static void AddOwnCars(FlatBufferBuilder builder, VectorOffset ownCarsOffset) { builder.AddOffset(6, ownCarsOffset.Value, 0); }
+  public static VectorOffset CreateOwnCarsVector(FlatBufferBuilder builder, Offset<Car>[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
+  public static VectorOffset CreateOwnCarsVectorBlock(FlatBufferBuilder builder, Offset<Car>[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
+  public static void StartOwnCarsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
+  public static void AddAllNames(FlatBufferBuilder builder, VectorOffset allNamesOffset) { builder.AddOffset(7, allNamesOffset.Value, 0); }
+  public static VectorOffset CreateAllNamesVector(FlatBufferBuilder builder, StringOffset[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
+  public static VectorOffset CreateAllNamesVectorBlock(FlatBufferBuilder builder, StringOffset[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
+  public static void StartAllNamesVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static Offset<Enemy> EndEnemy(FlatBufferBuilder builder) {
     int o = builder.EndObject();
     return new Offset<Enemy>(o);

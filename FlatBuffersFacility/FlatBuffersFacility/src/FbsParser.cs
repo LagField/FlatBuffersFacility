@@ -137,7 +137,7 @@ namespace FlatBuffersFacility.Parser
 
                     string[] spliteStrings = matchString.Split(':');
                     string fieldName = spliteStrings[0];
-                    string typeName = spliteStrings[1].ToLower();
+                    string typeName = spliteStrings[1];
 
                     TableFieldInfo newFieldInfo = new TableFieldInfo
                     {
@@ -169,6 +169,7 @@ namespace FlatBuffersFacility.Parser
                         fieldName = fieldName,
                         fieldTypeName = typeName,
                         isArray = true,
+                        isScalarType = CheckFlatbuffersTypeIsScalarType(typeName),
                         upperCamelCaseFieldName = ConvertToUpperCamelCase(fieldName),
                         fieldCSharpTypeName = ConvertToCSharpTypeName(typeName)
                     };

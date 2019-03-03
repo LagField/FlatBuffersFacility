@@ -57,18 +57,10 @@ namespace FlatBuffers
             protected set;
         }
 #else
-        public byte[] Buffer
-        {
-            get;
-            protected set;
-        }
+        public byte[] Buffer { get; protected set; }
 #endif
 
-        public int Length
-        {
-            get;
-            protected set;
-        }
+        public int Length { get; protected set; }
 
         public abstract void Dispose();
 
@@ -92,8 +84,7 @@ namespace FlatBuffers
         public override void GrowFront(int newSize)
         {
             if ((Length & 0xC0000000) != 0)
-                throw new Exception(
-                    "ByteBuffer: cannot grow buffer beyond 2 gigabytes.");
+                throw new Exception("ByteBuffer: cannot grow buffer beyond 2 gigabytes.");
 
             if (newSize < Length)
                 throw new Exception("ByteBuffer: cannot truncate buffer.");
@@ -160,7 +151,7 @@ namespace FlatBuffers
     public class ByteBuffer : IDisposable
     {
         private ByteBufferAllocator _buffer;
-        private int _pos;  // Must track start of the buffer.
+        private int _pos; // Must track start of the buffer.
 
         public ByteBuffer(ByteBufferAllocator allocator, int position)
         {
@@ -168,9 +159,13 @@ namespace FlatBuffers
             _pos = position;
         }
 
-        public ByteBuffer(int size) : this(new byte[size]) { }
+        public ByteBuffer(int size) : this(new byte[size])
+        {
+        }
 
-        public ByteBuffer(byte[] buffer) : this(buffer, 0) { }
+        public ByteBuffer(byte[] buffer) : this(buffer, 0)
+        {
+        }
 
         public ByteBuffer(byte[] buffer, int pos)
         {
@@ -186,12 +181,16 @@ namespace FlatBuffers
             }
         }
 
-        public int Position {
+        public int Position
+        {
             get { return _pos; }
             set { _pos = value; }
         }
 
-        public int Length { get { return _buffer.Length; } }
+        public int Length
+        {
+            get { return _buffer.Length; }
+        }
 
         public void Reset()
         {
@@ -223,17 +222,17 @@ namespace FlatBuffers
         /// </summary>
         private static Dictionary<Type, int> genericSizes = new Dictionary<Type, int>()
         {
-            { typeof(bool),     sizeof(bool) },
-            { typeof(float),    sizeof(float) },
-            { typeof(double),   sizeof(double) },
-            { typeof(sbyte),    sizeof(sbyte) },
-            { typeof(byte),     sizeof(byte) },
-            { typeof(short),    sizeof(short) },
-            { typeof(ushort),   sizeof(ushort) },
-            { typeof(int),      sizeof(int) },
-            { typeof(uint),     sizeof(uint) },
-            { typeof(ulong),    sizeof(ulong) },
-            { typeof(long),     sizeof(long) },
+            {typeof(bool), sizeof(bool)},
+            {typeof(float), sizeof(float)},
+            {typeof(double), sizeof(double)},
+            {typeof(sbyte), sizeof(sbyte)},
+            {typeof(byte), sizeof(byte)},
+            {typeof(short), sizeof(short)},
+            {typeof(ushort), sizeof(ushort)},
+            {typeof(int), sizeof(int)},
+            {typeof(uint), sizeof(uint)},
+            {typeof(ulong), sizeof(ulong)},
+            {typeof(long), sizeof(long)},
         };
 
         /// <summary>
@@ -290,8 +289,7 @@ namespace FlatBuffers
             }
         }
 #else
-        public T[] ToArray<T>(int pos, int len)
-            where T : struct
+        public T[] ToArray<T>(int pos, int len) where T : struct
         {
             AssertOffsetAndLength(pos, len);
             T[] arr = new T[len];
@@ -303,6 +301,31 @@ namespace FlatBuffers
         public byte[] ToSizedArray()
         {
             return ToArray<byte>(Position, Length - Position);
+        }
+
+        /// <summary>
+        /// 拷贝到MemoryStream
+        /// </summary>
+        /// <param name="stream"></param>
+        public void CopyToStream(MemoryStream stream)
+        {
+            //reset
+            stream.SetLength(0);
+
+            int len = Length - Position;
+            AssertOffsetAndLength(Position, len);
+            stream.Write(_buffer.ByteArray, Position, len);
+        }
+
+        public void CopyFromStream(MemoryStream stream)
+        {
+            stream.Position = 0;
+
+            Reset();
+            int len = (int) stream.Length;
+            AssertOffsetAndLength(Position, len);
+            stream.Read(_buffer.ByteArray, Length - len, len);
+            Position = Length - len;
         }
 
         public byte[] ToFullArray()
@@ -332,35 +355,30 @@ namespace FlatBuffers
 
 #if !UNSAFE_BYTEBUFFER
         // Pre-allocated helper arrays for convertion.
-        private float[] floathelper = new[] { 0.0f };
-        private int[] inthelper = new[] { 0 };
-        private double[] doublehelper = new[] { 0.0 };
-        private ulong[] ulonghelper = new[] { 0UL };
+        private float[] floathelper = new[] {0.0f};
+        private int[] inthelper = new[] {0};
+        private double[] doublehelper = new[] {0.0};
+        private ulong[] ulonghelper = new[] {0UL};
 #endif // !UNSAFE_BYTEBUFFER
 
         // Helper functions for the unsafe version.
         static public ushort ReverseBytes(ushort input)
         {
-            return (ushort)(((input & 0x00FFU) << 8) |
-                            ((input & 0xFF00U) >> 8));
+            return (ushort) (((input & 0x00FFU) << 8) | ((input & 0xFF00U) >> 8));
         }
+
         static public uint ReverseBytes(uint input)
         {
-            return ((input & 0x000000FFU) << 24) |
-                   ((input & 0x0000FF00U) <<  8) |
-                   ((input & 0x00FF0000U) >>  8) |
+            return ((input & 0x000000FFU) << 24) | ((input & 0x0000FF00U) << 8) | ((input & 0x00FF0000U) >> 8) |
                    ((input & 0xFF000000U) >> 24);
         }
+
         static public ulong ReverseBytes(ulong input)
         {
-            return (((input & 0x00000000000000FFUL) << 56) |
-                    ((input & 0x000000000000FF00UL) << 40) |
-                    ((input & 0x0000000000FF0000UL) << 24) |
-                    ((input & 0x00000000FF000000UL) <<  8) |
-                    ((input & 0x000000FF00000000UL) >>  8) |
-                    ((input & 0x0000FF0000000000UL) >> 24) |
-                    ((input & 0x00FF000000000000UL) >> 40) |
-                    ((input & 0xFF00000000000000UL) >> 56));
+            return (((input & 0x00000000000000FFUL) << 56) | ((input & 0x000000000000FF00UL) << 40) |
+                    ((input & 0x0000000000FF0000UL) << 24) | ((input & 0x00000000FF000000UL) << 8) |
+                    ((input & 0x000000FF00000000UL) >> 8) | ((input & 0x0000FF0000000000UL) >> 24) |
+                    ((input & 0x00FF000000000000UL) >> 40) | ((input & 0xFF00000000000000UL) >> 56));
         }
 
 #if !UNSAFE_BYTEBUFFER
@@ -371,14 +389,14 @@ namespace FlatBuffers
             {
                 for (int i = 0; i < count; i++)
                 {
-                    _buffer.Buffer[offset + i] = (byte)(data >> i * 8);
+                    _buffer.Buffer[offset + i] = (byte) (data >> i * 8);
                 }
             }
             else
             {
                 for (int i = 0; i < count; i++)
                 {
-                    _buffer.Buffer[offset + count - 1 - i] = (byte)(data >> i * 8);
+                    _buffer.Buffer[offset + count - 1 - i] = (byte) (data >> i * 8);
                 }
             }
         }
@@ -391,16 +409,17 @@ namespace FlatBuffers
             {
                 for (int i = 0; i < count; i++)
                 {
-                  r |= (ulong)_buffer.Buffer[offset + i] << i * 8;
+                    r |= (ulong) _buffer.Buffer[offset + i] << i * 8;
                 }
             }
             else
             {
-              for (int i = 0; i < count; i++)
-              {
-                r |= (ulong)_buffer.Buffer[offset + count - 1 - i] << i * 8;
-              }
+                for (int i = 0; i < count; i++)
+                {
+                    r |= (ulong) _buffer.Buffer[offset + count - 1 - i] << i * 8;
+                }
             }
+
             return r;
         }
 #endif // !UNSAFE_BYTEBUFFER
@@ -408,14 +427,12 @@ namespace FlatBuffers
         private void AssertOffsetAndLength(int offset, int length)
         {
 #if !BYTEBUFFER_NO_BOUNDS_CHECK
-            if (offset < 0 ||
-                offset > _buffer.Length - length)
+            if (offset < 0 || offset > _buffer.Length - length)
                 throw new ArgumentOutOfRangeException();
 #endif
         }
 
 #if UNSAFE_BYTEBUFFER
-
         public unsafe void PutSbyte(int offset, sbyte value)
         {
             AssertOffsetAndLength(offset, sizeof(sbyte));
@@ -444,7 +461,7 @@ namespace FlatBuffers
         public void PutSbyte(int offset, sbyte value)
         {
             AssertOffsetAndLength(offset, sizeof(sbyte));
-            _buffer.Buffer[offset] = (byte)value;
+            _buffer.Buffer[offset] = (byte) value;
         }
 
         public void PutByte(int offset, byte value)
@@ -480,8 +497,7 @@ namespace FlatBuffers
         public void PutStringUTF8(int offset, string value)
         {
             AssertOffsetAndLength(offset, value.Length);
-            Encoding.UTF8.GetBytes(value, 0, value.Length,
-                _buffer.ByteArray, offset);
+            Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer.ByteArray, offset);
         }
 #endif
 
@@ -562,31 +578,31 @@ namespace FlatBuffers
         public void PutShort(int offset, short value)
         {
             AssertOffsetAndLength(offset, sizeof(short));
-            WriteLittleEndian(offset, sizeof(short), (ulong)value);
+            WriteLittleEndian(offset, sizeof(short), (ulong) value);
         }
 
         public void PutUshort(int offset, ushort value)
         {
             AssertOffsetAndLength(offset, sizeof(ushort));
-            WriteLittleEndian(offset, sizeof(ushort), (ulong)value);
+            WriteLittleEndian(offset, sizeof(ushort), (ulong) value);
         }
 
         public void PutInt(int offset, int value)
         {
             AssertOffsetAndLength(offset, sizeof(int));
-            WriteLittleEndian(offset, sizeof(int), (ulong)value);
+            WriteLittleEndian(offset, sizeof(int), (ulong) value);
         }
 
         public void PutUint(int offset, uint value)
         {
             AssertOffsetAndLength(offset, sizeof(uint));
-            WriteLittleEndian(offset, sizeof(uint), (ulong)value);
+            WriteLittleEndian(offset, sizeof(uint), (ulong) value);
         }
 
         public void PutLong(int offset, long value)
         {
             AssertOffsetAndLength(offset, sizeof(long));
-            WriteLittleEndian(offset, sizeof(long), (ulong)value);
+            WriteLittleEndian(offset, sizeof(long), (ulong) value);
         }
 
         public void PutUlong(int offset, ulong value)
@@ -600,7 +616,7 @@ namespace FlatBuffers
             AssertOffsetAndLength(offset, sizeof(float));
             floathelper[0] = value;
             Buffer.BlockCopy(floathelper, 0, inthelper, 0, sizeof(float));
-            WriteLittleEndian(offset, sizeof(float), (ulong)inthelper[0]);
+            WriteLittleEndian(offset, sizeof(float), (ulong) inthelper[0]);
         }
 
         public void PutDouble(int offset, double value)
@@ -629,7 +645,7 @@ namespace FlatBuffers
         public sbyte GetSbyte(int index)
         {
             AssertOffsetAndLength(index, sizeof(sbyte));
-            return (sbyte)_buffer.Buffer[index];
+            return (sbyte) _buffer.Buffer[index];
         }
 
         public byte Get(int index)
@@ -738,27 +754,27 @@ namespace FlatBuffers
         // Slower versions of Get* for when unsafe code is not allowed.
         public short GetShort(int index)
         {
-            return (short)ReadLittleEndian(index, sizeof(short));
+            return (short) ReadLittleEndian(index, sizeof(short));
         }
 
         public ushort GetUshort(int index)
         {
-            return (ushort)ReadLittleEndian(index, sizeof(ushort));
+            return (ushort) ReadLittleEndian(index, sizeof(ushort));
         }
 
         public int GetInt(int index)
         {
-            return (int)ReadLittleEndian(index, sizeof(int));
+            return (int) ReadLittleEndian(index, sizeof(int));
         }
 
         public uint GetUint(int index)
         {
-            return (uint)ReadLittleEndian(index, sizeof(uint));
+            return (uint) ReadLittleEndian(index, sizeof(uint));
         }
 
         public long GetLong(int index)
         {
-           return (long)ReadLittleEndian(index, sizeof(long));
+            return (long) ReadLittleEndian(index, sizeof(long));
         }
 
         public ulong GetUlong(int index)
@@ -768,7 +784,7 @@ namespace FlatBuffers
 
         public float GetFloat(int index)
         {
-            int i = (int)ReadLittleEndian(index, sizeof(float));
+            int i = (int) ReadLittleEndian(index, sizeof(float));
             inthelper[0] = i;
             Buffer.BlockCopy(inthelper, 0, floathelper, 0, sizeof(float));
             return floathelper[0];
@@ -793,8 +809,7 @@ namespace FlatBuffers
         /// <param name="offset">The offset into this buffer where the copy will end</param>
         /// <param name="x">The array to copy data from</param>
         /// <returns>The 'start' location of this buffer now, after the copy completed</returns>
-        public int Put<T>(int offset, T[] x)
-            where T : struct
+        public int Put<T>(int offset, T[] x) where T : struct
         {
             if (x == null)
             {
@@ -808,8 +823,7 @@ namespace FlatBuffers
 
             if (!IsSupportedType<T>())
             {
-                throw new ArgumentException("Cannot put an array of type "
-                    + typeof(T) + " into this buffer");
+                throw new ArgumentException("Cannot put an array of type " + typeof(T) + " into this buffer");
             }
 
             if (BitConverter.IsLittleEndian)
@@ -829,14 +843,14 @@ namespace FlatBuffers
             }
             else
             {
-                throw new NotImplementedException("Big Endian Support not implemented yet " +
-                    "for putting typed arrays");
+                throw new NotImplementedException("Big Endian Support not implemented yet " + "for putting typed arrays");
                 // if we are BE, we have to swap each element by itself
                 //for(int i = x.Length - 1; i >= 0; i--)
                 //{
                 //  todo: low priority, but need to genericize the Put<T>() functions
                 //}
             }
+
             return offset;
         }
 

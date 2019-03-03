@@ -8,6 +8,8 @@ namespace TestNameSpace  ;
     hp:float;
     inventoryIds:[int];
     drivenCar:Car;
+    ownCars:[Car];
+    all_names:[string];
 }
 
 table Car{

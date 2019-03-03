@@ -46,11 +46,12 @@
         <Compile Include="FlatBuffersSrc\Offset.cs" />
         <Compile Include="FlatBuffersSrc\Struct.cs" />
         <Compile Include="FlatBuffersSrc\Table.cs" />
+        <Compile Include="GenerateCode\FlatbuffersCompilerGenerated\Test.cs" />
+        <Compile Include="GenerateCode\Test.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="GenerateCode" />
       <Folder Include="src" />
     </ItemGroup>
     <ItemGroup>
