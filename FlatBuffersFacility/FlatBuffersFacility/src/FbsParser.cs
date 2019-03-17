@@ -146,7 +146,7 @@ namespace FlatBuffersFacility.Parser
                         isArray = false,
                         isScalarType = CheckFlatbuffersTypeIsScalarType(typeName),
                         upperCamelCaseFieldName = ConvertToUpperCamelCase(fieldName),
-                        fieldCSharpTypeName = ConvertToCSharpTypeName(typeName)
+                        fieldCSharpTypeName = ConvertToCSharpTypeName(typeName),
                     };
                     fieldInfoList.Add(newFieldInfo);
                 }
@@ -169,9 +169,11 @@ namespace FlatBuffersFacility.Parser
                         fieldName = fieldName,
                         fieldTypeName = typeName,
                         isArray = true,
-                        isScalarType = CheckFlatbuffersTypeIsScalarType(typeName),
+                        //数组都不是scalar类型
+                        isScalarType = false,
                         upperCamelCaseFieldName = ConvertToUpperCamelCase(fieldName),
-                        fieldCSharpTypeName = ConvertToCSharpTypeName(typeName)
+                        fieldCSharpTypeName = ConvertToCSharpTypeName(typeName),
+                        arrayTypeIsScalarType = CheckFlatbuffersTypeIsScalarType(typeName)
                     };
                     fieldInfoList.Add(newFieldInfo);
                 }
@@ -314,11 +316,20 @@ namespace FlatBuffersFacility.Parser
         /// flatbuffers compiler会将任何field名称转换为upper camel case
         /// </summary>
         public string upperCamelCaseFieldName;
-
+        /// <summary>
+        /// field类型，如果是数组，则记录的是数组元素的类型
+        /// </summary>
         public string fieldTypeName;
+        /// <summary>
+        /// <see cref="fieldTypeName"/>的csharp类型版本，主要就是处理了基础类型flatbuffers和c#名称不一致的问题
+        /// </summary>
         public string fieldCSharpTypeName;
         public bool isArray;
         public bool isScalarType;
+        /// <summary>
+        ///  如果field是数组类型，则肯定<see cref="isScalarType"/>是false，但是数组元素有可能是scalar类型。
+        /// </summary>
+        public bool arrayTypeIsScalarType;
 
         public bool IsString
         {

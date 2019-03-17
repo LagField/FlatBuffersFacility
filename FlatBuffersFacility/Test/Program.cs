@@ -18,11 +18,13 @@ namespace Test
             MemoryStream ms = new MemoryStream();
             FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
 
-            //non scalar
+            Enemy.StartOwnCarsVector(fbb,1);
             Car.StartCar(fbb);
             Car.AddId(fbb, 100);
             Car.AddSpeed(fbb, 200.3f);
             var carOffset = Car.EndCar(fbb);
+            fbb.AddOffset(carOffset.Value);
+            var ownCarOffset = fbb.EndVector();
 
             //scalar array
             Enemy.StartInventoryIdsVector(fbb, 10);
@@ -33,15 +35,15 @@ namespace Test
 
             var inventoryOffset = fbb.EndVector();
 
-            StringOffset stringOffset = fbb.CreateString("jfoiajwseofjaw");
-            Enemy.StartAllNamesVector(fbb, 10);
-            fbb.AddOffset(stringOffset.Value);
+            Enemy.StartAllNamesVector(fbb, 1);
+            fbb.AddOffset(fbb.CreateString("jfoiajwseofjaw").Value);
             VectorOffset allNamesOffset = fbb.EndVector();
 
 
             Enemy.StartEnemy(fbb);
             Enemy.AddHp(fbb, 3203);
             Enemy.AddDrivenCar(fbb, carOffset);
+            Enemy.AddOwnCars(fbb,ownCarOffset);
             Enemy.AddInventoryIds(fbb, inventoryOffset);
             Enemy.AddAllNames(fbb, allNamesOffset);
             var enemyOffset = Enemy.EndEnemy(fbb);
@@ -55,7 +57,7 @@ namespace Test
             fbb.DataBuffer.CopyFromStream(ms);
 
             Enemy e = Enemy.GetRootAsEnemy(fbb.DataBuffer);
-            Debug.WriteLine(e.AllNames(0));
+            Debug.WriteLine(e.OwnCars(0).Value.Speed);
             Debug.WriteLine(e.Hp);
         }
 

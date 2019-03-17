@@ -12,8 +12,14 @@ namespace FlatBuffersFacility
             {
                 end = source.Length + end;
             }
-            int len = end - start;               // Calculate length
+
+            int len = end - start; // Calculate length
             return source.Substring(start, len); // Return Substring of length
+        }
+
+        public static string UpperFirstChar(this string s)
+        {
+            return s[0].ToString().ToUpper() + s.Substring(1);
         }
     }
 }

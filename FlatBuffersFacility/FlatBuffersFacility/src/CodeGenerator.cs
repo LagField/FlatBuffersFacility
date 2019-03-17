@@ -155,28 +155,35 @@ namespace FlatBuffersFacility
                 }
 
                 formatWriter.Clear();
-
-                //write using
-                formatWriter.WriteLine("using System.Collections.Generic;");
-                formatWriter.WriteLine("using FlatBuffers;");
-                formatWriter.NewLine();
-
-                //write namespace
-                formatWriter.WriteLine($"namespace {targetNameSpace}");
-                formatWriter.BeginBlock();
-                //write classes
-                for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
-                {
-                    WriteClassCode(fbsStruct.tableStructures[j], fbsStruct.namespaceName);
-                    formatWriter.NewLine();
-                }
-
-                formatWriter.EndBlock();
-
-                //save generate csharp file
-                string csharpFilePath = $"{AppData.CsOutputDirectory}/{fbsFileNameWithoutExtension}.cs";
-                File.WriteAllText(csharpFilePath, formatWriter.ToString());
+                WriteClassDefineCode(targetNameSpace, fbsStruct, fbsFileNameWithoutExtension);
+                formatWriter.Clear();
+                WriteFlatBuffersFacilityCode(targetNameSpace, fbsStruct, fbsFileNameWithoutExtension);
             }
+        }
+
+        private static void WriteClassDefineCode(string targetNameSpace, FbsStructure fbsStruct,
+            string fbsFileNameWithoutExtension)
+        {
+            //write using
+            formatWriter.WriteLine("using System.Collections.Generic;");
+            formatWriter.WriteLine("using FlatBuffers;");
+            formatWriter.NewLine();
+
+            //write namespace
+            formatWriter.WriteLine($"namespace {targetNameSpace}");
+            formatWriter.BeginBlock();
+            //write classes
+            for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
+            {
+                WriteClassCode(fbsStruct.tableStructures[j], fbsStruct.namespaceName);
+                formatWriter.NewLine();
+            }
+
+            formatWriter.EndBlock();
+
+            //save generate csharp file
+            string csharpFilePath = $"{AppData.CsOutputDirectory}/{fbsFileNameWithoutExtension}.cs";
+            File.WriteAllText(csharpFilePath, formatWriter.ToString());
         }
 
         private static void WriteClassCode(TableStructure tableStructure, string fbsNameSpace)
@@ -195,15 +202,23 @@ namespace FlatBuffersFacility
 
         private static void WriteFieldCode(TableFieldInfo structFieldInfo, string fbsNameSpace)
         {
-            if (structFieldInfo.isArray)
+            if (structFieldInfo.isScalarType)
             {
-                formatWriter.WriteLine($"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName};");
-                if (!structFieldInfo.isScalarType)
+                formatWriter.WriteLine($"public {structFieldInfo.fieldCSharpTypeName} {structFieldInfo.fieldName};");
+            }
+            else
+            {
+                if (structFieldInfo.isArray)
                 {
+                    formatWriter.WriteLine($"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName};");
                     if (structFieldInfo.IsString)
                     {
                         formatWriter.WriteLine(
                             $"private List<StringOffset> {structFieldInfo.fieldName}OffsetList = new List<StringOffset>();");
+                    }
+                    else if (structFieldInfo.arrayTypeIsScalarType)
+                    {
+                        //write nothing
                     }
                     else
                     {
@@ -211,10 +226,124 @@ namespace FlatBuffersFacility
                             $"private List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>> {structFieldInfo.fieldName}OffsetList = new List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>>();");
                     }
                 }
+                else
+                {
+                    formatWriter.WriteLine($"public {structFieldInfo.fieldCSharpTypeName} {structFieldInfo.fieldName};");
+                }
+            }
+        }
+
+        private static void WriteFlatBuffersFacilityCode(string targetNameSpace, FbsStructure fbsStruct,
+            string fbsFileNameWithoutExtension)
+        {
+            //write using
+            formatWriter.WriteLine("using System.Collections.Generic;");
+            formatWriter.WriteLine("using FlatBuffers;");
+            formatWriter.NewLine();
+
+            //write namespace
+            formatWriter.WriteLine($"namespace {targetNameSpace}");
+            formatWriter.BeginBlock();
+
+            //write class
+            formatWriter.WriteLine($"public static class {targetNameSpace}ConvertMethods");
+            formatWriter.BeginBlock();
+
+            for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
+            {
+                TableStructure tableStructure = fbsStruct.tableStructures[j];
+                WriteTableFacilityCode(tableStructure, fbsStruct.namespaceName);
+                formatWriter.NewLine();
+            }
+
+            formatWriter.EndBlock();
+            formatWriter.EndBlock();
+
+            string csharpFilePath = $"{AppData.CsOutputDirectory}/{fbsFileNameWithoutExtension}ConvertMethods.cs";
+            File.WriteAllText(csharpFilePath, formatWriter.ToString());
+        }
+
+        private static void WriteTableFacilityCode(TableStructure tableStructure, string fbsNameSpace)
+        {
+            string tableName = tableStructure.tableName;
+            formatWriter.WriteLine(
+                $"public static Offset<{fbsNameSpace}.{tableName}> Encode({tableName} source, FlatBufferBuilder fbb)");
+            formatWriter.BeginBlock();
+
+            //non scalar encode methods
+            for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
+            {
+                TableFieldInfo fieldInfo = tableStructure.fieldInfos[i];
+                if (fieldInfo.isScalarType)
+                {
+                    continue;
+                }
+
+                GenerateNonScalarEncodeCode(tableStructure, fieldInfo, fbsNameSpace);
+            }
+
+            formatWriter.WriteLine($"{fbsNameSpace}.{tableName}.Start{tableName}(fbb);");
+            for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
+            {
+                TableFieldInfo fieldInfo = tableStructure.fieldInfos[i];
+
+                if (fieldInfo.isScalarType)
+                {
+                    formatWriter.WriteLine(
+                        $"{fbsNameSpace}.{tableName}.Add{fieldInfo.upperCamelCaseFieldName}(fbb,source.{fieldInfo.fieldName});");
+                }
+                else
+                {
+                    formatWriter.WriteLine(
+                        $"{fbsNameSpace}.{tableName}.Add{fieldInfo.upperCamelCaseFieldName}(fbb,{fieldInfo.fieldName}Offset);");
+                }
+            }
+
+            formatWriter.WriteLine($"return {fbsNameSpace}.{tableName}.End{tableName}(fbb);");
+
+            formatWriter.EndBlock();
+        }
+
+        private static void GenerateNonScalarEncodeCode(TableStructure tableStructure, TableFieldInfo fieldInfo,
+            string fbsNameSpace)
+        {
+            string fieldName = fieldInfo.fieldName;
+            if (fieldInfo.isArray)
+            {
+                formatWriter.WriteLine(
+                    $"{fbsNameSpace}.{tableStructure.tableName}.Start{fieldInfo.upperCamelCaseFieldName}Vector(fbb,source.{fieldName}.Count);");
+                formatWriter.WriteLine($"for (int i = source.{fieldName}.Count - 1; i >= 0; i--)");
+                formatWriter.BeginBlock();
+                if (fieldInfo.arrayTypeIsScalarType)
+                {
+                    formatWriter.WriteLine($"fbb.Add{fieldInfo.fieldCSharpTypeName.UpperFirstChar()}(source.inventoryIds[i]);");
+                }
+                else
+                {
+                    if (fieldInfo.IsString)
+                    {
+                        formatWriter.WriteLine($"fbb.AddOffset(fbb.CreateString(source.{fieldInfo.fieldName}[i]).Value);");
+                    }
+                    else
+                    {
+                        formatWriter.WriteLine($"fbb.AddOffset(Encode(source.{fieldInfo.fieldName}[i],fbb).Value);");
+                    }
+                }
+
+                formatWriter.EndBlock();
+                formatWriter.WriteLine($"VectorOffset {fieldName}Offset = fbb.EndVector();");
             }
             else
             {
-                formatWriter.WriteLine($"public {structFieldInfo.fieldCSharpTypeName} {structFieldInfo.fieldName};");
+                if (fieldInfo.IsString)
+                {
+                    formatWriter.WriteLine($"StringOffset {fieldName}Offset = fbb.CreateString(source.name);");
+                }
+                else
+                {
+                    formatWriter.WriteLine(
+                        $"Offset<{fbsNameSpace}.{fieldInfo.fieldCSharpTypeName}> {fieldName}Offset = Encode(source.{fieldName},fbb);");
+                }
             }
         }
     }

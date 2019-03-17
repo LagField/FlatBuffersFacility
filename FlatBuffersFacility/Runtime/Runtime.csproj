@@ -48,6 +48,7 @@
         <Compile Include="FlatBuffersSrc\Table.cs" />
         <Compile Include="GenerateCode\FlatbuffersCompilerGenerated\Test.cs" />
         <Compile Include="GenerateCode\Test.cs" />
+        <Compile Include="GenerateCode\TestConvertMethods.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
