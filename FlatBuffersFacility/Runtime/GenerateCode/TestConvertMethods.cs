@@ -38,6 +38,28 @@ namespace SkillData
             TestNameSpace.Enemy.AddAllNames(fbb,all_namesOffset);
             return TestNameSpace.Enemy.EndEnemy(fbb);
         }
+         public static void Decode(Enemy destination, TestNameSpace.Enemy source)
+        {
+            destination.id = source.Id;
+            destination.name = source.Name;
+            destination.isLock = source.IsLock;
+            destination.hp = source.Hp;
+            for (int i = 0; i < source.InventoryIdsLength; i++)
+            {
+                destination.inventoryIds.Add(source.InventoryIds(i));
+            }
+            Decode(destination.drivenCar,source.DrivenCar.Value);
+            for (int i = 0; i < source.OwnCarsLength; i++)
+            {
+                Car newCar = new Car();
+                Decode(newCar,source.OwnCars(i).Value);
+                destination.ownCars.Add(newCar);
+            }
+            for (int i = 0; i < source.AllNamesLength; i++)
+            {
+                destination.all_names.Add(source.AllNames(i));
+            }
+        }
 
         public static Offset<TestNameSpace.Car> Encode(Car source, FlatBufferBuilder fbb)
         {
@@ -45,6 +67,11 @@ namespace SkillData
             TestNameSpace.Car.AddId(fbb,source.id);
             TestNameSpace.Car.AddSpeed(fbb,source.speed);
             return TestNameSpace.Car.EndCar(fbb);
+        }
+         public static void Decode(Car destination, TestNameSpace.Car source)
+        {
+            destination.id = source.Id;
+            destination.speed = source.Speed;
         }
 
     }

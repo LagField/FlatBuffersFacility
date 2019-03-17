@@ -12,9 +12,7 @@ namespace SkillData
         public List<int> inventoryIds;
         public Car drivenCar;
         public List<Car> ownCars;
-        private List<Offset<TestNameSpace.Car>> ownCarsOffsetList = new List<Offset<TestNameSpace.Car>>();
         public List<string> all_names;
-        private List<StringOffset> all_namesOffsetList = new List<StringOffset>();
     }
 
     public class Car

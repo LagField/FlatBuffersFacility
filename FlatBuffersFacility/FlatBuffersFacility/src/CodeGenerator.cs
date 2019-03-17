@@ -211,20 +211,6 @@ namespace FlatBuffersFacility
                 if (structFieldInfo.isArray)
                 {
                     formatWriter.WriteLine($"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName};");
-                    if (structFieldInfo.IsString)
-                    {
-                        formatWriter.WriteLine(
-                            $"private List<StringOffset> {structFieldInfo.fieldName}OffsetList = new List<StringOffset>();");
-                    }
-                    else if (structFieldInfo.arrayTypeIsScalarType)
-                    {
-                        //write nothing
-                    }
-                    else
-                    {
-                        formatWriter.WriteLine(
-                            $"private List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>> {structFieldInfo.fieldName}OffsetList = new List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>>();");
-                    }
                 }
                 else
                 {
@@ -252,7 +238,8 @@ namespace FlatBuffersFacility
             for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
             {
                 TableStructure tableStructure = fbsStruct.tableStructures[j];
-                WriteTableFacilityCode(tableStructure, fbsStruct.namespaceName);
+                WriteTableEncodeCode(tableStructure, fbsStruct.namespaceName);
+                WriteTableDecodeCode(tableStructure, fbsStruct.namespaceName);
                 formatWriter.NewLine();
             }
 
@@ -263,7 +250,9 @@ namespace FlatBuffersFacility
             File.WriteAllText(csharpFilePath, formatWriter.ToString());
         }
 
-        private static void WriteTableFacilityCode(TableStructure tableStructure, string fbsNameSpace)
+        #region encode
+
+        private static void WriteTableEncodeCode(TableStructure tableStructure, string fbsNameSpace)
         {
             string tableName = tableStructure.tableName;
             formatWriter.WriteLine(
@@ -346,6 +335,61 @@ namespace FlatBuffersFacility
                 }
             }
         }
+
+        #endregion
+
+        #region decode
+
+        private static void WriteTableDecodeCode(TableStructure tableStructure, string fbsNameSpace)
+        {
+            formatWriter.WriteLine(
+                $" public static void Decode({tableStructure.tableName} destination, {fbsNameSpace}.{tableStructure.tableName} source)");
+            formatWriter.BeginBlock();
+
+            for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
+            {
+                TableFieldInfo fieldInfo = tableStructure.fieldInfos[i];
+                if (fieldInfo.isScalarType || fieldInfo.IsString && !fieldInfo.isArray)
+                {
+                    formatWriter.WriteLine($"destination.{fieldInfo.fieldName} = source.{fieldInfo.upperCamelCaseFieldName};");
+                }
+                else
+                {
+                    if (fieldInfo.isArray)
+                    {
+                        if (fieldInfo.arrayTypeIsScalarType || fieldInfo.IsString)
+                        {
+                            formatWriter.WriteLine($"for (int i = 0; i < source.{fieldInfo.upperCamelCaseFieldName}Length; i++)");
+                            formatWriter.BeginBlock();
+                            formatWriter.WriteLine(
+                                $"destination.{fieldInfo.fieldName}.Add(source.{fieldInfo.upperCamelCaseFieldName}(i));");
+                            formatWriter.EndBlock();
+                        }
+                        else
+                        {
+                            formatWriter.WriteLine($"for (int i = 0; i < source.{fieldInfo.upperCamelCaseFieldName}Length; i++)");
+                            formatWriter.BeginBlock();
+                            formatWriter.WriteLine(
+                                $"{fieldInfo.fieldCSharpTypeName} new{fieldInfo.fieldCSharpTypeName} = new {fieldInfo.fieldCSharpTypeName}();");
+                            formatWriter.WriteLine(
+                                $"Decode(new{fieldInfo.fieldCSharpTypeName},source.{fieldInfo.upperCamelCaseFieldName}(i).Value);");
+                            formatWriter.WriteLine(
+                                $"destination.{fieldInfo.fieldName}.Add(new{fieldInfo.fieldCSharpTypeName});");
+                            formatWriter.EndBlock();
+                        }
+                    }
+                    else
+                    {
+                        formatWriter.WriteLine(
+                            $"Decode(destination.{fieldInfo.fieldName},source.{fieldInfo.upperCamelCaseFieldName}.Value);");
+                    }
+                }
+            }
+
+            formatWriter.EndBlock();
+        }
+
+        #endregion
     }
 
     public class GenerateCodeException : Exception
