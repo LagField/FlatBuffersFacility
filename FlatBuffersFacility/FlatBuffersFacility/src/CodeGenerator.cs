@@ -157,7 +157,7 @@ namespace FlatBuffersFacility
                 formatWriter.Clear();
                 WriteClassDefineCode(targetNameSpace, fbsStruct, fbsFileNameWithoutExtension);
                 formatWriter.Clear();
-                WriteFlatBuffersFacilityCode(targetNameSpace, fbsStruct, fbsFileNameWithoutExtension);
+                WriteFlatBuffersFacilityCode(targetNameSpace, fbsStruct);
             }
         }
 
@@ -175,7 +175,7 @@ namespace FlatBuffersFacility
             //write classes
             for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
             {
-                WriteClassCode(fbsStruct.tableStructures[j], fbsStruct.namespaceName);
+                WriteClassCode(targetNameSpace, fbsStruct.tableStructures[j], fbsStruct.namespaceName);
                 formatWriter.NewLine();
             }
 
@@ -186,7 +186,7 @@ namespace FlatBuffersFacility
             File.WriteAllText(csharpFilePath, formatWriter.ToString());
         }
 
-        private static void WriteClassCode(TableStructure tableStructure, string fbsNameSpace)
+        private static void WriteClassCode(string targetNamespace, TableStructure tableStructure, string fbsNameSpace)
         {
             formatWriter.WriteLine($"public class {tableStructure.tableName}");
             formatWriter.BeginBlock();
@@ -196,6 +196,8 @@ namespace FlatBuffersFacility
                 TableFieldInfo structFieldInfo = tableStructure.fieldInfos[i];
                 WriteFieldCode(structFieldInfo, fbsNameSpace);
             }
+
+            WriteClassEncodeAndDecode(tableStructure, targetNamespace, fbsNameSpace);
 
             formatWriter.EndBlock();
         }
@@ -210,7 +212,8 @@ namespace FlatBuffersFacility
             {
                 if (structFieldInfo.isArray)
                 {
-                    formatWriter.WriteLine($"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName};");
+                    formatWriter.WriteLine(
+                        $"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName} = new List<{structFieldInfo.fieldCSharpTypeName}>();");
                 }
                 else
                 {
@@ -219,8 +222,29 @@ namespace FlatBuffersFacility
             }
         }
 
-        private static void WriteFlatBuffersFacilityCode(string targetNameSpace, FbsStructure fbsStruct,
-            string fbsFileNameWithoutExtension)
+        private static void WriteClassEncodeAndDecode(TableStructure tableStructure, string targetNamespace, string fbsNameSpace)
+        {
+            //encode
+            formatWriter.NewLine();
+            formatWriter.WriteLine("public void Encode(FlatBufferBuilder fbb)");
+            formatWriter.BeginBlock();
+            formatWriter.WriteLine(
+                $"Offset<{fbsNameSpace}.{tableStructure.tableName}> offset = {targetNamespace}ConvertMethods.Encode(this, fbb);");
+            formatWriter.WriteLine("fbb.Finish(offset.Value);");
+            formatWriter.EndBlock();
+
+            //decode
+            formatWriter.NewLine();
+            formatWriter.WriteLine("public void Decode(ByteBuffer bb)");
+            formatWriter.BeginBlock();
+            formatWriter.WriteLine(
+                $"{fbsNameSpace}.{tableStructure.tableName} source = {fbsNameSpace}.{tableStructure.tableName}.GetRootAs{tableStructure.tableName}(bb);");
+            formatWriter.WriteLine($"{targetNamespace}ConvertMethods.Decode(this, source);");
+
+            formatWriter.EndBlock();
+        }
+
+        private static void WriteFlatBuffersFacilityCode(string targetNameSpace, FbsStructure fbsStruct)
         {
             //write using
             formatWriter.WriteLine("using System.Collections.Generic;");
@@ -246,7 +270,7 @@ namespace FlatBuffersFacility
             formatWriter.EndBlock();
             formatWriter.EndBlock();
 
-            string csharpFilePath = $"{AppData.CsOutputDirectory}/{fbsFileNameWithoutExtension}ConvertMethods.cs";
+            string csharpFilePath = $"{AppData.CsOutputDirectory}/{targetNameSpace}ConvertMethods.cs";
             File.WriteAllText(csharpFilePath, formatWriter.ToString());
         }
 
@@ -373,15 +397,18 @@ namespace FlatBuffersFacility
                                 $"{fieldInfo.fieldCSharpTypeName} new{fieldInfo.fieldCSharpTypeName} = new {fieldInfo.fieldCSharpTypeName}();");
                             formatWriter.WriteLine(
                                 $"Decode(new{fieldInfo.fieldCSharpTypeName},source.{fieldInfo.upperCamelCaseFieldName}(i).Value);");
-                            formatWriter.WriteLine(
-                                $"destination.{fieldInfo.fieldName}.Add(new{fieldInfo.fieldCSharpTypeName});");
+                            formatWriter.WriteLine($"destination.{fieldInfo.fieldName}.Add(new{fieldInfo.fieldCSharpTypeName});");
                             formatWriter.EndBlock();
                         }
                     }
                     else
                     {
+                        formatWriter.WriteLine($"if (source.{fieldInfo.upperCamelCaseFieldName}.HasValue)");
+                        formatWriter.BeginBlock();
+                        formatWriter.WriteLine($"destination.{fieldInfo.fieldName} = new {fieldInfo.fieldCSharpTypeName}();");
                         formatWriter.WriteLine(
                             $"Decode(destination.{fieldInfo.fieldName},source.{fieldInfo.upperCamelCaseFieldName}.Value);");
+                        formatWriter.EndBlock();
                     }
                 }
             }

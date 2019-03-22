@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using FlatBuffers;
 
-namespace SkillData
+namespace MyProtocol
 {
-    public static class SkillDataConvertMethods
+    public static class MyProtocolConvertMethods
     {
         public static Offset<TestNameSpace.Enemy> Encode(Enemy source, FlatBufferBuilder fbb)
         {
@@ -48,7 +48,11 @@ namespace SkillData
             {
                 destination.inventoryIds.Add(source.InventoryIds(i));
             }
-            Decode(destination.drivenCar,source.DrivenCar.Value);
+            if (source.DrivenCar.HasValue)
+            {
+                destination.drivenCar = new Car();
+                Decode(destination.drivenCar,source.DrivenCar.Value);
+            }
             for (int i = 0; i < source.OwnCarsLength; i++)
             {
                 Car newCar = new Car();
