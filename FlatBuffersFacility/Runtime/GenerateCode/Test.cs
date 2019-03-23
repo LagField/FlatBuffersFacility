@@ -3,7 +3,7 @@ using FlatBuffers;
 
 namespace MyProtocol
 {
-    public class Enemy
+    public class Enemy : FlatBuffersFacility.PoolObject
     {
         public int id;
         public string name;
@@ -27,7 +27,7 @@ namespace MyProtocol
         }
     }
 
-    public class Car
+    public class Car : FlatBuffersFacility.PoolObject
     {
         public int id;
         public float speed;

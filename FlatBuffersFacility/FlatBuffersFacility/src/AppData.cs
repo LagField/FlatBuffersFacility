@@ -55,14 +55,13 @@ namespace FlatBuffersFacility
         public static string TargetNamespace
         {
             get => config.targetNamespace;
-            set
-            {
-                if (config.targetNamespace != value)
-                {
-                    config.targetNamespace = value;
-                    SaveConfig();
-                }
-            }
+            set => config.targetNamespace = value;
+        }
+
+        public static bool IsGeneratePoolVersion
+        {
+            get => config.isGeneratePoolVersion;
+            set => config.isGeneratePoolVersion = value;
         }
 
         public static void Init()
@@ -78,7 +77,7 @@ namespace FlatBuffersFacility
             }
         }
 
-        private static void SaveConfig()
+        public static void SaveConfig()
         {
             if (config == null)
             {
@@ -97,6 +96,7 @@ namespace FlatBuffersFacility
             public string compilerPath;
             public string csOutputDirectory;
             public string targetNamespace;
+            public bool isGeneratePoolVersion;
         }
     }
 }

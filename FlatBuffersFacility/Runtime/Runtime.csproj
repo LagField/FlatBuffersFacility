@@ -49,8 +49,11 @@
     <Compile Include="GenerateCode\FlatbuffersCompilerGenerated\Test.cs" />
     <Compile Include="GenerateCode\MyProtocolConvertMethods.cs" />
     <Compile Include="GenerateCode\Test.cs" />
+    <Compile Include="Pool.cs" />
+    <Compile Include="PoolObject.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UniqueList.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="FbsFiles\Compile.bat" />

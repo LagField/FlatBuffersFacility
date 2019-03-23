@@ -12,7 +12,7 @@ namespace FlatBuffersFacility
         private static FbsParser fbsParser;
         private static CodeFormatWriter formatWriter;
 
-        public static void Generate(string targetNamespace, string[] selectFbsFileNames)
+        public static void Generate(string targetNamespace, string[] selectFbsFileNames, bool generatePoolVersion)
         {
             try
             {
@@ -55,7 +55,7 @@ namespace FlatBuffersFacility
                 RunFlatbuffersCompiler(selectFbsFileNames);
 
                 //生成cs文件
-                GenerateCustomCSharpFiles(targetNamespace, selectFbsFileNames);
+                GenerateCustomCSharpFiles(targetNamespace, selectFbsFileNames, generatePoolVersion);
 
                 MessageBox.Show("完成", "生成完成");
             }
@@ -132,7 +132,8 @@ namespace FlatBuffersFacility
             return string.IsNullOrWhiteSpace(batchOutput);
         }
 
-        private static void GenerateCustomCSharpFiles(string targetNameSpace, string[] selectFbsFileNames)
+        private static void GenerateCustomCSharpFiles(string targetNameSpace, string[] selectFbsFileNames,
+            bool generatePoolVersion)
         {
             string filesPath = AppData.FbsDirectory;
             //每一个fbs文件生成一份cs代码
@@ -155,14 +156,14 @@ namespace FlatBuffersFacility
                 }
 
                 formatWriter.Clear();
-                WriteClassDefineCode(targetNameSpace, fbsStruct, fbsFileNameWithoutExtension);
+                WriteClassDefineCode(targetNameSpace, fbsStruct, fbsFileNameWithoutExtension, generatePoolVersion);
                 formatWriter.Clear();
-                WriteFlatBuffersFacilityCode(targetNameSpace, fbsStruct);
+                WriteFlatBuffersFacilityCode(targetNameSpace, fbsStruct, generatePoolVersion);
             }
         }
 
         private static void WriteClassDefineCode(string targetNameSpace, FbsStructure fbsStruct,
-            string fbsFileNameWithoutExtension)
+            string fbsFileNameWithoutExtension, bool generatePoolVersion)
         {
             //write using
             formatWriter.WriteLine("using System.Collections.Generic;");
@@ -175,7 +176,7 @@ namespace FlatBuffersFacility
             //write classes
             for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
             {
-                WriteClassCode(targetNameSpace, fbsStruct.tableStructures[j], fbsStruct.namespaceName);
+                WriteClassCode(targetNameSpace, fbsStruct.tableStructures[j], fbsStruct.namespaceName, generatePoolVersion);
                 formatWriter.NewLine();
             }
 
@@ -186,9 +187,18 @@ namespace FlatBuffersFacility
             File.WriteAllText(csharpFilePath, formatWriter.ToString());
         }
 
-        private static void WriteClassCode(string targetNamespace, TableStructure tableStructure, string fbsNameSpace)
+        private static void WriteClassCode(string targetNamespace, TableStructure tableStructure, string fbsNameSpace,
+            bool generatePoolVersion)
         {
-            formatWriter.WriteLine($"public class {tableStructure.tableName}");
+            if (generatePoolVersion)
+            {
+                formatWriter.WriteLine($"public class {tableStructure.tableName} : FlatBuffersFacility.PoolObject");
+            }
+            else
+            {
+                formatWriter.WriteLine($"public class {tableStructure.tableName}");
+            }
+
             formatWriter.BeginBlock();
 
             for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
@@ -244,7 +254,7 @@ namespace FlatBuffersFacility
             formatWriter.EndBlock();
         }
 
-        private static void WriteFlatBuffersFacilityCode(string targetNameSpace, FbsStructure fbsStruct)
+        private static void WriteFlatBuffersFacilityCode(string targetNameSpace, FbsStructure fbsStruct, bool generatePoolVersion)
         {
             //write using
             formatWriter.WriteLine("using System.Collections.Generic;");
@@ -263,7 +273,7 @@ namespace FlatBuffersFacility
             {
                 TableStructure tableStructure = fbsStruct.tableStructures[j];
                 WriteTableEncodeCode(tableStructure, fbsStruct.namespaceName);
-                WriteTableDecodeCode(tableStructure, fbsStruct.namespaceName);
+                WriteTableDecodeCode(tableStructure, fbsStruct.namespaceName, generatePoolVersion);
                 formatWriter.NewLine();
             }
 
@@ -364,7 +374,7 @@ namespace FlatBuffersFacility
 
         #region decode
 
-        private static void WriteTableDecodeCode(TableStructure tableStructure, string fbsNameSpace)
+        private static void WriteTableDecodeCode(TableStructure tableStructure, string fbsNameSpace, bool generatePoolVersion)
         {
             formatWriter.WriteLine(
                 $" public static void Decode({tableStructure.tableName} destination, {fbsNameSpace}.{tableStructure.tableName} source)");
@@ -393,8 +403,17 @@ namespace FlatBuffersFacility
                         {
                             formatWriter.WriteLine($"for (int i = 0; i < source.{fieldInfo.upperCamelCaseFieldName}Length; i++)");
                             formatWriter.BeginBlock();
-                            formatWriter.WriteLine(
-                                $"{fieldInfo.fieldCSharpTypeName} new{fieldInfo.fieldCSharpTypeName} = new {fieldInfo.fieldCSharpTypeName}();");
+                            if (generatePoolVersion)
+                            {
+                                formatWriter.WriteLine(
+                                    $"{fieldInfo.fieldCSharpTypeName} new{fieldInfo.fieldCSharpTypeName} = FlatBuffersFacility.Pool.Get<{fieldInfo.fieldCSharpTypeName}>();");
+                            }
+                            else
+                            {
+                                formatWriter.WriteLine(
+                                    $"{fieldInfo.fieldCSharpTypeName} new{fieldInfo.fieldCSharpTypeName} = new {fieldInfo.fieldCSharpTypeName}();");
+                            }
+
                             formatWriter.WriteLine(
                                 $"Decode(new{fieldInfo.fieldCSharpTypeName},source.{fieldInfo.upperCamelCaseFieldName}(i).Value);");
                             formatWriter.WriteLine($"destination.{fieldInfo.fieldName}.Add(new{fieldInfo.fieldCSharpTypeName});");
@@ -405,7 +424,15 @@ namespace FlatBuffersFacility
                     {
                         formatWriter.WriteLine($"if (source.{fieldInfo.upperCamelCaseFieldName}.HasValue)");
                         formatWriter.BeginBlock();
-                        formatWriter.WriteLine($"destination.{fieldInfo.fieldName} = new {fieldInfo.fieldCSharpTypeName}();");
+                        if (generatePoolVersion)
+                        {
+                            formatWriter.WriteLine(
+                                $"destination.{fieldInfo.fieldName} = FlatBuffersFacility.Pool.Get<{fieldInfo.fieldCSharpTypeName}>();");
+                        }
+                        else
+                        {
+                            formatWriter.WriteLine($"destination.{fieldInfo.fieldName} = new {fieldInfo.fieldCSharpTypeName}();");
+                        }
                         formatWriter.WriteLine(
                             $"Decode(destination.{fieldInfo.fieldName},source.{fieldInfo.upperCamelCaseFieldName}.Value);");
                         formatWriter.EndBlock();

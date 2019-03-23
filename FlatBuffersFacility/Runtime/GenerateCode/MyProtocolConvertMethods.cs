@@ -50,12 +50,12 @@ namespace MyProtocol
             }
             if (source.DrivenCar.HasValue)
             {
-                destination.drivenCar = new Car();
+                destination.drivenCar = FlatBuffersFacility.Pool.Get<Car>();
                 Decode(destination.drivenCar,source.DrivenCar.Value);
             }
             for (int i = 0; i < source.OwnCarsLength; i++)
             {
-                Car newCar = new Car();
+                Car newCar = FlatBuffersFacility.Pool.Get<Car>();
                 Decode(newCar,source.OwnCars(i).Value);
                 destination.ownCars.Add(newCar);
             }

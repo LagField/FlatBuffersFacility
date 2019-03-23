@@ -9,6 +9,7 @@ namespace FlatBuffersFacility
     public class MainForm : Form
     {
         private TextBox namespaceTextBox;
+        private CheckBox generatePoolVersionCheckBox;
 
         public MainForm()
         {
@@ -29,6 +30,8 @@ namespace FlatBuffersFacility
             base.OnClosed(e);
 
             AppData.TargetNamespace = namespaceTextBox.Text;
+            AppData.IsGeneratePoolVersion = generatePoolVersionCheckBox.Checked.Value;
+            AppData.SaveConfig();
         }
 
         private TableLayout ConstructLayout()
@@ -200,9 +203,17 @@ namespace FlatBuffersFacility
             TableLayout namespaceInputLayout = new TableLayout();
             namespaceInputLayout.Rows.Add(new TableRow
             {
-                Cells = {new TableCell {Control = new Label {Text = "输出命名空间:"}}, new TableCell {Control = namespaceTextBox}}
+                Cells = {new TableCell {Control = new Label {Text = "输出命名空间:"}}, new TableCell {Control = namespaceTextBox}},
             });
             layout.Rows.Add(namespaceInputLayout);
+
+            generatePoolVersionCheckBox = new CheckBox {Text = "生成对象池版本",Checked = AppData.IsGeneratePoolVersion};
+            TableLayout miscLayout = new TableLayout();
+            miscLayout.Rows.Add(new TableRow
+            {
+                Cells = {new TableCell {Control = generatePoolVersionCheckBox}}
+            });
+            layout.Rows.Add(miscLayout);
 
             //generate button
             Button generateButton = new Button {Text = "生成", Width = 100, Height = 50};
@@ -235,7 +246,8 @@ namespace FlatBuffersFacility
                 }
             }
 
-            CodeGenerator.Generate(namespaceTextBox.Text, selectFbsFileNameList.ToArray());
+            CodeGenerator.Generate(namespaceTextBox.Text, selectFbsFileNameList.ToArray(),
+                generatePoolVersionCheckBox.Checked.Value);
         }
 
         private void OnOpenCSharpDirectoryBtnClick(object sender, EventArgs e)
@@ -250,8 +262,8 @@ namespace FlatBuffersFacility
 
         private void OnSelectCSharpDirectoryBtnClick(object sender, EventArgs e)
         {
-            SelectFolderDialog selectFolderDialog =
-                new SelectFolderDialog {Title = "选择csharp输出文件夹", Directory = AppData.CsOutputDirectory};
+            SelectFolderDialog selectFolderDialog = new SelectFolderDialog
+                {Title = "选择csharp输出文件夹", Directory = AppData.CsOutputDirectory};
             if (selectFolderDialog.ShowDialog(this) == DialogResult.Ok)
             {
                 AppData.CsOutputDirectory = selectFolderDialog.Directory;
@@ -311,8 +323,8 @@ namespace FlatBuffersFacility
 
         private void OnSelectFbsDirectoryBtnClick(object sender, EventArgs e)
         {
-            SelectFolderDialog selectFolderDialog =
-                new SelectFolderDialog {Title = "选择.fbs文件夹", Directory = AppData.FbsDirectory};
+            SelectFolderDialog selectFolderDialog = new SelectFolderDialog
+                {Title = "选择.fbs文件夹", Directory = AppData.FbsDirectory};
             if (selectFolderDialog.ShowDialog(this) == DialogResult.Ok)
             {
                 AppData.FbsDirectory = selectFolderDialog.Directory;
