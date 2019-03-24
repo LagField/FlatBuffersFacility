@@ -9,6 +9,8 @@ namespace FlatBuffersFacility
 
         public static void Put<T>(T item) where T : PoolObject, new()
         {
+            item.Release();
+            
             Type type = typeof(T);
             if (poolDictionary.ContainsKey(type))
             {
@@ -23,8 +25,7 @@ namespace FlatBuffersFacility
             }
             else
             {
-                UniqueList<PoolObject> poolList = new UniqueList<PoolObject>();
-                poolList.Add(item);
+                UniqueList<PoolObject> poolList = new UniqueList<PoolObject> {item};
                 poolDictionary.Add(type, poolList);
             }
         }

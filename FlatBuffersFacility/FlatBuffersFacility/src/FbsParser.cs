@@ -191,7 +191,7 @@ namespace FlatBuffersFacility.Parser
             throw new ParseFileException {errorMessage = "解析文件出错，格式不正确"};
         }
 
-        private Dictionary<string, string> csharpTypeNameConvertDic = new Dictionary<string, string>
+        public static readonly Dictionary<string, string> CsharpTypeNameConvertDic = new Dictionary<string, string>
         {
             {"int32", "int"},
             {"float32", "float"},
@@ -207,7 +207,7 @@ namespace FlatBuffersFacility.Parser
             {"float64", "double"},
         };
 
-        private HashSet<string> scalarTypeNameSet = new HashSet<string>
+        private static readonly HashSet<string> ScalarTypeNameSet = new HashSet<string>
         {
             "byte",
             "int8",
@@ -232,12 +232,12 @@ namespace FlatBuffersFacility.Parser
 
         private string ConvertToCSharpTypeName(string originName)
         {
-            return !csharpTypeNameConvertDic.TryGetValue(originName, out string typeName) ? originName : typeName;
+            return !CsharpTypeNameConvertDic.TryGetValue(originName, out string typeName) ? originName : typeName;
         }
 
         private bool CheckFlatbuffersTypeIsScalarType(string typeName)
         {
-            return scalarTypeNameSet.Contains(typeName);
+            return ScalarTypeNameSet.Contains(typeName);
         }
 
         private string ConvertToUpperCamelCase(string originName)

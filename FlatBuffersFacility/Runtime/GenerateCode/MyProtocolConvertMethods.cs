@@ -14,17 +14,29 @@ namespace MyProtocol
                 fbb.AddInt(source.inventoryIds[i]);
             }
             VectorOffset inventoryIdsOffset = fbb.EndVector();
-            Offset<TestNameSpace.Car> drivenCarOffset = Encode(source.drivenCar,fbb);
+            Offset<TestNameSpace.Car> drivenCarOffset  = new Offset<TestNameSpace.Car>();
+            if(source.drivenCar != null)
+            {
+                drivenCarOffset = Encode(source.drivenCar,fbb);
+            }
+            for (int i = 0; i < source.ownCars.Count; i++)
+            {
+                source.ownCarsOffsetList.Add(Encode(source.ownCars[i],fbb));
+            }
             TestNameSpace.Enemy.StartOwnCarsVector(fbb,source.ownCars.Count);
             for (int i = source.ownCars.Count - 1; i >= 0; i--)
             {
-                fbb.AddOffset(Encode(source.ownCars[i],fbb).Value);
+                fbb.AddOffset(source.ownCarsOffsetList[i].Value);
             }
             VectorOffset ownCarsOffset = fbb.EndVector();
+            for (int i = 0; i < source.all_names.Count; i++)
+            {
+                source.all_namesOffsetList.Add(fbb.CreateString(source.all_names[i]));
+            }
             TestNameSpace.Enemy.StartAllNamesVector(fbb,source.all_names.Count);
             for (int i = source.all_names.Count - 1; i >= 0; i--)
             {
-                fbb.AddOffset(fbb.CreateString(source.all_names[i]).Value);
+                fbb.AddOffset(source.all_namesOffsetList[i].Value);
             }
             VectorOffset all_namesOffset = fbb.EndVector();
             TestNameSpace.Enemy.StartEnemy(fbb);

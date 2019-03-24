@@ -8,93 +8,72 @@ namespace Test
     {
         public static void Main(string[] args)
         {
+            TestPoolVersion();
+        }
+
+        private static void Test()
+        {
             Enemy enemy = new Enemy();
             enemy.id = 1;
             enemy.hp = 200;
             enemy.name = "jone";
-            enemy.drivenCar = new Car {id = 12, speed = 300};
-            enemy.inventoryIds.Add(1);
-            enemy.inventoryIds.Add(32);
-            enemy.inventoryIds.Add(24);
+            for (int i = 0; i < 2; i++)
+            {
+                enemy.ownCars.Add(new Car {id = i, speed = i * 100});
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                enemy.all_names.Add("name + " + i);
+            }
 
             FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
             enemy.Encode(fbb);
 
-            Debug.WriteLine(fbb.SizedByteArray().Length);
-
             Enemy newEnemy = new Enemy();
             newEnemy.Decode(fbb.DataBuffer);
 
-            Debug.WriteLine(newEnemy.name);
-            Debug.WriteLine(newEnemy.drivenCar.speed);
-            Debug.WriteLine(newEnemy.ownCars.Count);
-            for (int i = 0; i < newEnemy.inventoryIds.Count; i++)
-            {
-                Debug.WriteLine(newEnemy.inventoryIds[i]);
-            }
+            Debug.WriteLine(newEnemy.ownCars[1].speed);
+            Debug.WriteLine(newEnemy.all_names[1]);
         }
 
-//        private static void TestFlatbuffers()
-//        {
-//            MemoryStream ms = new MemoryStream();
-//            FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
-//
-//            Enemy.StartOwnCarsVector(fbb,1);
-//            Car.StartCar(fbb);
-//            Car.AddId(fbb, 100);
-//            Car.AddSpeed(fbb, 200.3f);
-//            var carOffset = Car.EndCar(fbb);
-//            fbb.AddOffset(carOffset.Value);
-//            var ownCarOffset = fbb.EndVector();
-//
-//            //scalar array
-//            Enemy.StartInventoryIdsVector(fbb, 10);
-//            for (int i = 10; i >= 0; i--)
-//            {
-//                fbb.AddInt(i);
-//            }
-//
-//            var inventoryOffset = fbb.EndVector();
-//
-//            Enemy.StartAllNamesVector(fbb, 1);
-//            fbb.AddOffset(fbb.CreateString("jfoiajwseofjaw").Value);
-//            VectorOffset allNamesOffset = fbb.EndVector();
-//
-//
-//            Enemy.StartEnemy(fbb);
-//            Enemy.AddHp(fbb, 3203);
-//            Enemy.AddDrivenCar(fbb, carOffset);
-//            Enemy.AddOwnCars(fbb,ownCarOffset);
-//            Enemy.AddInventoryIds(fbb, inventoryOffset);
-//            Enemy.AddAllNames(fbb, allNamesOffset);
-//            var enemyOffset = Enemy.EndEnemy(fbb);
-//
-//            fbb.Finish(enemyOffset.Value);
-//            byte[] encodeBytes = fbb.SizedByteArray();
-//            Debug.WriteLine("encode bytes length: " + encodeBytes.Length);
-//            fbb.DataBuffer.CopyToStream(ms);
-//
-//            fbb.Clear();
-//            fbb.DataBuffer.CopyFromStream(ms);
-//
-//            Enemy e = Enemy.GetRootAsEnemy(fbb.DataBuffer);
-//            Debug.WriteLine(e.OwnCars(0).Value.Speed);
-//            Debug.WriteLine(e.Hp);
-//        }
-//
-//
-//        private static void TestParseFbsFile()
-//        {
-//            const string testFilePath = @"D:\CSharpProjects\FlatBuffersFacility\Runtime\FbsFiles\Test.fbs";
-//            if (!File.Exists(testFilePath))
-//            {
-//                Debug.WriteLine($"找不到文件{testFilePath}");
-//                return;
-//            }
-//
-//            string[] allLines = File.ReadAllLines(testFilePath);
-//            FbsParser parser = new FbsParser();
-//            parser.ParseFbsFileLines(allLines);
-//        }
+        private static void TestPoolVersion()
+        {
+            Enemy enemy = FlatBuffersFacility.Pool.Get<Enemy>();
+            enemy.hp = 23;
+            enemy.id = 1000;
+            enemy.name = "shit";
+            enemy.drivenCar = FlatBuffersFacility.Pool.Get<Car>();
+            enemy.drivenCar.id = 123;
+            enemy.drivenCar.speed = 2000;
+
+            for (int i = 0; i < 3; i++)
+            {
+                Car car = FlatBuffersFacility.Pool.Get<Car>();
+                car.id = i;
+                car.speed = 200 * i;
+                enemy.ownCars.Add(car);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                enemy.all_names.Add("my name " + i);
+            }
+
+            FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
+            enemy.Encode(fbb);
+            FlatBuffersFacility.Pool.Put(enemy);
+
+            Enemy anotherEnemy = FlatBuffersFacility.Pool.Get<Enemy>();
+            anotherEnemy.Decode(fbb.DataBuffer);
+
+            Debug.WriteLine(anotherEnemy.hp);
+            Debug.WriteLine(anotherEnemy.name);
+            Debug.WriteLine(anotherEnemy.drivenCar == null);
+            Debug.WriteLine(anotherEnemy.ownCars[2].speed);
+            Debug.WriteLine(anotherEnemy.ownCars.Count);
+            Debug.WriteLine(anotherEnemy.all_names[4]);
+            Debug.WriteLine(anotherEnemy.all_names.Count);
+        }
     }
 }

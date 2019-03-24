@@ -204,15 +204,20 @@ namespace FlatBuffersFacility
             for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
             {
                 TableFieldInfo structFieldInfo = tableStructure.fieldInfos[i];
-                WriteFieldCode(structFieldInfo, fbsNameSpace);
+                WriteFieldCode(structFieldInfo, fbsNameSpace, generatePoolVersion);
             }
 
             WriteClassEncodeAndDecode(tableStructure, targetNamespace, fbsNameSpace);
+            if (generatePoolVersion)
+            {
+                formatWriter.NewLine();
+                WriteClassReleaseCode(tableStructure);
+            }
 
             formatWriter.EndBlock();
         }
 
-        private static void WriteFieldCode(TableFieldInfo structFieldInfo, string fbsNameSpace)
+        private static void WriteFieldCode(TableFieldInfo structFieldInfo, string fbsNameSpace, bool generatePoolVersion)
         {
             if (structFieldInfo.isScalarType)
             {
@@ -224,6 +229,20 @@ namespace FlatBuffersFacility
                 {
                     formatWriter.WriteLine(
                         $"public List<{structFieldInfo.fieldCSharpTypeName}> {structFieldInfo.fieldName} = new List<{structFieldInfo.fieldCSharpTypeName}>();");
+                    if (generatePoolVersion)
+                    {
+                        if (structFieldInfo.IsString)
+                        {
+                            formatWriter.WriteLine($"internal List<StringOffset> {structFieldInfo.fieldName}OffsetList = " +
+                                                   "new List<StringOffset>();");
+                        }
+                        else if (!structFieldInfo.arrayTypeIsScalarType)
+                        {
+                            formatWriter.WriteLine(
+                                $"internal List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>> {structFieldInfo.fieldName}OffsetList = " +
+                                $"new List<Offset<{fbsNameSpace}.{structFieldInfo.fieldCSharpTypeName}>>();");
+                        }
+                    }
                 }
                 else
                 {
@@ -254,6 +273,65 @@ namespace FlatBuffersFacility
             formatWriter.EndBlock();
         }
 
+        private static void WriteClassReleaseCode(TableStructure tableStructure)
+        {
+            formatWriter.WriteLine("public override void Release()");
+            formatWriter.BeginBlock();
+
+            for (int i = 0; i < tableStructure.fieldInfos.Length; i++)
+            {
+                TableFieldInfo fieldInfo = tableStructure.fieldInfos[i];
+                if (fieldInfo.isArray)
+                {
+                    string fieldCSharpTypeName = fieldInfo.fieldCSharpTypeName;
+                    if (IsNumericType(fieldCSharpTypeName) || fieldCSharpTypeName == "bool" ||
+                        fieldCSharpTypeName == "string")
+                    {
+                        formatWriter.WriteLine($"{fieldInfo.fieldName}.Clear();");
+                    }
+                    else
+                    {
+                        formatWriter.WriteLine($"for (int i = 0; i < {fieldInfo.fieldName}.Count; i++)");
+                        formatWriter.BeginBlock();
+                        formatWriter.WriteLine($"{fieldInfo.fieldCSharpTypeName} item = {fieldInfo.fieldName}[i];");
+                        formatWriter.WriteLine("FlatBuffersFacility.Pool.Put(item);");
+                        formatWriter.EndBlock();
+                        formatWriter.WriteLine($"{fieldInfo.fieldName}.Clear();");
+                    }
+
+                    if (fieldCSharpTypeName == "string" || !IsNumericType(fieldCSharpTypeName) && fieldCSharpTypeName != "bool")
+                    {
+                        formatWriter.WriteLine($"{fieldInfo.fieldName}OffsetList.Clear();");
+                    }
+                }
+                else
+                {
+                    if (IsNumericType(fieldInfo.fieldCSharpTypeName))
+                    {
+                        formatWriter.WriteLine($"{fieldInfo.fieldName} = 0;");
+                    }
+                    else if (fieldInfo.fieldCSharpTypeName == "bool")
+                    {
+                        formatWriter.WriteLine($"{fieldInfo.fieldName} = false;");
+                    }
+                    else if (fieldInfo.fieldCSharpTypeName == "string")
+                    {
+                        formatWriter.WriteLine($"{fieldInfo.fieldName} = \"\";");
+                    }
+                    else
+                    {
+                        formatWriter.WriteLine($"if({fieldInfo.fieldName} != null)");
+                        formatWriter.BeginBlock();
+                        formatWriter.WriteLine($"FlatBuffersFacility.Pool.Put({fieldInfo.fieldName});");
+                        formatWriter.WriteLine($"{fieldInfo.fieldName} = null;");
+                        formatWriter.EndBlock();
+                    }
+                }
+            }
+
+            formatWriter.EndBlock();
+        }
+
         private static void WriteFlatBuffersFacilityCode(string targetNameSpace, FbsStructure fbsStruct, bool generatePoolVersion)
         {
             //write using
@@ -272,7 +350,7 @@ namespace FlatBuffersFacility
             for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
             {
                 TableStructure tableStructure = fbsStruct.tableStructures[j];
-                WriteTableEncodeCode(tableStructure, fbsStruct.namespaceName);
+                WriteTableEncodeCode(tableStructure, fbsStruct.namespaceName, generatePoolVersion);
                 WriteTableDecodeCode(tableStructure, fbsStruct.namespaceName, generatePoolVersion);
                 formatWriter.NewLine();
             }
@@ -286,7 +364,7 @@ namespace FlatBuffersFacility
 
         #region encode
 
-        private static void WriteTableEncodeCode(TableStructure tableStructure, string fbsNameSpace)
+        private static void WriteTableEncodeCode(TableStructure tableStructure, string fbsNameSpace, bool generatePoolVersion)
         {
             string tableName = tableStructure.tableName;
             formatWriter.WriteLine(
@@ -302,7 +380,7 @@ namespace FlatBuffersFacility
                     continue;
                 }
 
-                GenerateNonScalarEncodeCode(tableStructure, fieldInfo, fbsNameSpace);
+                GenerateNonScalarEncodeCode(tableStructure, fieldInfo, fbsNameSpace, generatePoolVersion);
             }
 
             formatWriter.WriteLine($"{fbsNameSpace}.{tableName}.Start{tableName}(fbb);");
@@ -328,33 +406,79 @@ namespace FlatBuffersFacility
         }
 
         private static void GenerateNonScalarEncodeCode(TableStructure tableStructure, TableFieldInfo fieldInfo,
-            string fbsNameSpace)
+            string fbsNameSpace, bool generatePoolVersion)
         {
             string fieldName = fieldInfo.fieldName;
             if (fieldInfo.isArray)
             {
-                formatWriter.WriteLine(
-                    $"{fbsNameSpace}.{tableStructure.tableName}.Start{fieldInfo.upperCamelCaseFieldName}Vector(fbb,source.{fieldName}.Count);");
-                formatWriter.WriteLine($"for (int i = source.{fieldName}.Count - 1; i >= 0; i--)");
-                formatWriter.BeginBlock();
                 if (fieldInfo.arrayTypeIsScalarType)
                 {
+                    formatWriter.WriteLine(
+                        $"{fbsNameSpace}.{tableStructure.tableName}.Start{fieldInfo.upperCamelCaseFieldName}Vector(fbb,source.{fieldName}.Count);");
+                    formatWriter.WriteLine($"for (int i = source.{fieldName}.Count - 1; i >= 0; i--)");
+                    formatWriter.BeginBlock();
                     formatWriter.WriteLine($"fbb.Add{fieldInfo.fieldCSharpTypeName.UpperFirstChar()}(source.inventoryIds[i]);");
+                    formatWriter.EndBlock();
+                    formatWriter.WriteLine($"VectorOffset {fieldName}Offset = fbb.EndVector();");
                 }
+                //其他table类型
                 else
                 {
-                    if (fieldInfo.IsString)
+                    if (generatePoolVersion)
                     {
-                        formatWriter.WriteLine($"fbb.AddOffset(fbb.CreateString(source.{fieldInfo.fieldName}[i]).Value);");
+                        formatWriter.WriteLine($"for (int i = 0; i < source.{fieldInfo.fieldName}.Count; i++)");
+                        formatWriter.BeginBlock();
+                        if (fieldInfo.IsString)
+                        {
+                            formatWriter.WriteLine(
+                                $"source.{fieldInfo.fieldName}OffsetList.Add(fbb.CreateString(source.{fieldInfo.fieldName}[i]));");
+                        }
+                        else
+                        {
+                            formatWriter.WriteLine(
+                                $"source.{fieldInfo.fieldName}OffsetList.Add(Encode(source.{fieldInfo.fieldName}[i],fbb));");
+                        }
+
+                        formatWriter.EndBlock();
+
+                        formatWriter.WriteLine(
+                            $"{fbsNameSpace}.{tableStructure.tableName}.Start{fieldInfo.upperCamelCaseFieldName}Vector(fbb,source.{fieldInfo.fieldName}.Count);");
+                        formatWriter.WriteLine($"for (int i = source.{fieldInfo.fieldName}.Count - 1; i >= 0; i--)");
+                        formatWriter.BeginBlock();
+                        formatWriter.WriteLine($"fbb.AddOffset(source.{fieldInfo.fieldName}OffsetList[i].Value);");
+                        formatWriter.EndBlock();
+                        
+                        formatWriter.WriteLine($"VectorOffset {fieldInfo.fieldName}Offset = fbb.EndVector();");
                     }
+                    //not generate pool version code
                     else
                     {
-                        formatWriter.WriteLine($"fbb.AddOffset(Encode(source.{fieldInfo.fieldName}[i],fbb).Value);");
+                        if (fieldInfo.IsString)
+                        {
+                            formatWriter.WriteLine($"StringOffset[] {fieldInfo.fieldName}Offsets = " +
+                                                   $"new StringOffset[source.{fieldInfo.fieldName}.Count];");
+                            formatWriter.WriteLine($"for (int i = source.{fieldInfo.fieldName}.Count - 1; i >= 0; i--)");
+                            formatWriter.BeginBlock();
+                            formatWriter.WriteLine(
+                                $"{fieldInfo.fieldName}Offsets[i] = fbb.CreateString(source.{fieldInfo.fieldName}[i]);");
+                            formatWriter.EndBlock();
+                        }
+                        else
+                        {
+                            formatWriter.WriteLine(
+                                $"Offset<{fbsNameSpace}.{fieldInfo.fieldCSharpTypeName}>[] {fieldInfo.fieldName}Offsets = " +
+                                $"new Offset<{fbsNameSpace}.{fieldInfo.fieldCSharpTypeName}>[source.{fieldInfo.fieldName}.Count];");
+                            formatWriter.WriteLine($"for (int i = source.{fieldInfo.fieldName}.Count - 1; i >= 0; i--)");
+                            formatWriter.BeginBlock();
+                            formatWriter.WriteLine(
+                                $"{fieldInfo.fieldName}Offsets[i] = Encode(source.{fieldInfo.fieldName}[i],fbb);");
+                            formatWriter.EndBlock();
+                        }
+
+                        formatWriter.WriteLine($"VectorOffset {fieldInfo.fieldName}Offset = " +
+                                               $"{fbsNameSpace}.{tableStructure.tableName}.Create{fieldInfo.upperCamelCaseFieldName}Vector(fbb, {fieldInfo.fieldName}Offsets);");
                     }
                 }
-
-                formatWriter.EndBlock();
-                formatWriter.WriteLine($"VectorOffset {fieldName}Offset = fbb.EndVector();");
             }
             else
             {
@@ -365,7 +489,11 @@ namespace FlatBuffersFacility
                 else
                 {
                     formatWriter.WriteLine(
-                        $"Offset<{fbsNameSpace}.{fieldInfo.fieldCSharpTypeName}> {fieldName}Offset = Encode(source.{fieldName},fbb);");
+                        $"Offset<{fbsNameSpace}.{fieldInfo.fieldCSharpTypeName}> {fieldName}Offset  = new Offset<{fbsNameSpace}.{fieldInfo.fieldCSharpTypeName}>();");
+                    formatWriter.WriteLine($"if(source.{fieldName} != null)");
+                    formatWriter.BeginBlock();
+                    formatWriter.WriteLine($"{fieldName}Offset = Encode(source.{fieldName},fbb);");
+                    formatWriter.EndBlock();
                 }
             }
         }
@@ -433,6 +561,7 @@ namespace FlatBuffersFacility
                         {
                             formatWriter.WriteLine($"destination.{fieldInfo.fieldName} = new {fieldInfo.fieldCSharpTypeName}();");
                         }
+
                         formatWriter.WriteLine(
                             $"Decode(destination.{fieldInfo.fieldName},source.{fieldInfo.upperCamelCaseFieldName}.Value);");
                         formatWriter.EndBlock();
@@ -444,6 +573,19 @@ namespace FlatBuffersFacility
         }
 
         #endregion
+
+        private static bool IsNumericType(string typeName)
+        {
+            foreach (var kv in FbsParser.CsharpTypeNameConvertDic)
+            {
+                if (kv.Value == typeName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public class GenerateCodeException : Exception

@@ -87,11 +87,14 @@ namespace FlatBuffersFacility
             }
 
             list.Insert(index, item);
+            set.Add(item);
         }
 
         public void RemoveAt(int index)
         {
+            T item = list[index];
             list.RemoveAt(index);
+            set.Remove(item);
         }
 
         public T this[int index]
@@ -110,6 +113,7 @@ namespace FlatBuffersFacility
             int lastIndex = list.Count - 1;
             T result = list[lastIndex];
             list.RemoveAt(lastIndex);
+            set.Remove(result);
             return result;
         }
     }
