@@ -265,7 +265,22 @@ namespace FlatBuffersFacility.Parser
 
     public class FbsStructure
     {
-        public string namespaceName;
+        public string namespaceName = "";
+
+        public string ValidNameSpaceName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(namespaceName))
+                {
+                    return "global::";
+                }
+                else
+                {
+                    return namespaceName + ".";
+                }
+            }
+        }
         public TableStructure[] tableStructures;
 
         public override string ToString()

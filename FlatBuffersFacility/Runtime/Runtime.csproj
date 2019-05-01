@@ -47,7 +47,7 @@
     <Compile Include="FlatBuffersSrc\Struct.cs" />
     <Compile Include="FlatBuffersSrc\Table.cs" />
     <Compile Include="GenerateCode\FlatbuffersCompilerGenerated\Test.cs" />
-    <Compile Include="GenerateCode\MyProtocolConvertMethods.cs" />
+    <Compile Include="GenerateCode\Game_WebProtocolConvertMethods.cs" />
     <Compile Include="GenerateCode\Test.cs" />
     <Compile Include="Pool.cs" />
     <Compile Include="PoolObject.cs" />

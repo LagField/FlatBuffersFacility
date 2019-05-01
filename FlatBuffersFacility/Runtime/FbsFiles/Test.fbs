@@ -1,4 +1,4 @@
-namespace TestNameSpace  ;
+namespace FB_WebProtocol;
 
   table Enemy  
 {
