@@ -108,9 +108,10 @@ namespace FlatBuffersFacility.Parser
 
                 bool isEndOfObject = line.Contains("}");
 
+                //这里使用正则表达式寻找，因为fbs允许多个field写在一行
                 //find pattern: fieldname:typename; or fieldname:[typename]; ;
-                const string fieldPattern = @"[a-zA-Z_+][a-zA-Z0-9_]+ *: *[a-zA-Z0-9]+ *;";
-                const string arrayFieldPattern = @"[a-zA-Z_+][a-zA-Z0-9_]+ *: *\[ *[a-zA-Z0-9]+ *\] *;";
+                const string fieldPattern = @"[a-zA-Z_][a-zA-Z0-9_]+ *: *([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+;";
+                const string arrayFieldPattern = @"[a-zA-Z_][a-zA-Z0-9_]+ *: *\[([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+ *\] *;";
                 MatchCollection fieldMatchCollection = Regex.Matches(line, fieldPattern);
                 MatchCollection arrayFieldMatchCollection = Regex.Matches(line, arrayFieldPattern);
                 int fieldCount = fieldMatchCollection.Count;
@@ -131,8 +132,8 @@ namespace FlatBuffersFacility.Parser
                 for (int i = 0; i < fieldCount; i++)
                 {
                     string matchString = fieldMatchCollection[i].Value;
-                    //remove ;
                     matchString = matchString.Replace(" ", "");
+                    //remove ;
                     matchString = matchString.Slice(0, -1);
 
                     string[] spliteStrings = matchString.Split(':');
@@ -275,10 +276,8 @@ namespace FlatBuffersFacility.Parser
                 {
                     return "global::";
                 }
-                else
-                {
-                    return namespaceName + ".";
-                }
+
+                return $"global::{namespaceName}.";
             }
         }
         public TableStructure[] tableStructures;

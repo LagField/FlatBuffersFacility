@@ -1,15 +1,16 @@
+include "Test2.fbs";
 namespace FB_WebProtocol;
 
   table Enemy  
 {
-    id:int32;
-    name:string;
+    id:int32;    name:string;
     isLock:bool;
     hp:float;
     inventoryIds:[int];
     drivenCar:Car;
     ownCars:[Car];
     all_names:[string];
+    weapon:FB_WebProtocol2.Weapon;
 }
 
 table Car{

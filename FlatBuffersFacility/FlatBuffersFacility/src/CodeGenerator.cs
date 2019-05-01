@@ -89,7 +89,7 @@ namespace FlatBuffersFacility
             {
                 string fileName = selectFbsFileNames[i];
 
-                cmdStringBuilder.Append($"{AppData.FbsDirectory}\\{fileName}");
+                cmdStringBuilder.Append($"{AppData.FbsDirectory}\\{fileName} ");
             }
 //            Debug.WriteLine(cmdStringBuilder.ToString());
 
@@ -141,7 +141,7 @@ namespace FlatBuffersFacility
             //每一个fbs文件生成一份cs代码
             for (int i = 0; i < selectFbsFileNames.Length; i++)
             {
-                string fbsFilePath = $"{filesPath}/{selectFbsFileNames[i]}";
+                string fbsFilePath = $"{filesPath}\\{selectFbsFileNames[i]}";
                 string fbsFileNameWithoutExtension = Path.GetFileNameWithoutExtension(fbsFilePath);
 //                Debug.WriteLine(filePath);
 
@@ -155,6 +155,14 @@ namespace FlatBuffersFacility
                 if (fbsStruct.tableStructures.Length == 0)
                 {
                     throw new GenerateCodeException {errorMessage = $"文件 {fbsFilePath} 中没有读取到有效的table"};
+                }
+
+                if (fbsStruct.namespaceName == targetNameSpace)
+                {
+                    throw new GenerateCodeException
+                    {
+                        errorMessage = $"文件 {fbsFilePath} 设定的namespace名称和工具输出的C#代码namespace相同了，确保命名空间不要冲突。然后删除刚才生成的文件，再试一次。"
+                    };
                 }
 
                 formatWriter.Clear();
@@ -173,7 +181,7 @@ namespace FlatBuffersFacility
             formatWriter.NewLine();
 
             //write namespace
-            formatWriter.WriteLine($"namespace {targetNameSpace}");
+            formatWriter.WriteLine($"namespace {targetNameSpace}.{fbsStruct.namespaceName}");
             formatWriter.BeginBlock();
             //write classes
             for (int j = 0; j < fbsStruct.tableStructures.Length; j++)
@@ -252,7 +260,8 @@ namespace FlatBuffersFacility
             }
         }
 
-        private static void WriteClassEncodeAndDecode(TableStructure tableStructure, string targetNamespace, string validFbsNameSpace)
+        private static void WriteClassEncodeAndDecode(TableStructure tableStructure, string targetNamespace,
+            string validFbsNameSpace)
         {
             //encode
             formatWriter.NewLine();
@@ -484,7 +493,7 @@ namespace FlatBuffersFacility
                     }
                 }
             }
-            else//not array
+            else //not array
             {
                 if (fieldInfo.IsString)
                 {

@@ -1,0 +1,8 @@
+namespace FB_WebProtocol2;
+
+  table Weapon  
+{
+    id:int32;
+    name:string;
+    ammo_capacity:int32;
+}
