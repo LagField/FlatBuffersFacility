@@ -71,6 +71,7 @@
     <Compile Include="Assets\Scripts\Pool\Pool.cs" />
     <Compile Include="Assets\Scripts\Pool\PoolObject.cs" />
     <Compile Include="Assets\Scripts\Pool\UniqueList.cs" />
+    <Compile Include="Assets\Scripts\Test\Test.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>D:/CSharpProjects/FlatBuffersFacility/UnityExample/FlatBuffersFacilitySample/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>

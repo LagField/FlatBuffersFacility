@@ -38,7 +38,7 @@ namespace WebProtocol
             destination.id = source.Id;
             if (source.Position.HasValue)
             {
-                destination.position = new FlatBuffersProtocol.Vec3();
+                destination.position = FlatBuffersFacility.Pool.Get<FlatBuffersProtocol.Vec3>();
                 Decode(destination.position,source.Position.Value);
             }
             for (int i = 0; i < source.InventoryIdsLength; i++)
@@ -47,7 +47,7 @@ namespace WebProtocol
             }
             if (source.Weapon.HasValue)
             {
-                destination.weapon = new FlatBuffersProtocol.Weapon();
+                destination.weapon = FlatBuffersFacility.Pool.Get<FlatBuffersProtocol.Weapon>();
                 Decode(destination.weapon,source.Weapon.Value);
             }
             destination.teamId = source.TeamId;

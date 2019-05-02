@@ -181,7 +181,7 @@ namespace FlatBuffersFacility
             layout.Rows.Add(namespaceInputLayout);
 
             generatePoolVersionCheckBox = new CheckBox {Text = "生成对象池版本", Checked = AppData.IsGeneratePoolVersion};
-            generatePoolVersionCheckBox.DataContextChanged += (sender, args) =>
+            generatePoolVersionCheckBox.CheckedChanged += (sender, args) =>
             {
                 AppData.IsGeneratePoolVersion = generatePoolVersionCheckBox.Checked.Value;
                 AppData.SaveConfig();
@@ -216,6 +216,7 @@ namespace FlatBuffersFacility
                 AppData.TargetNamespace = namespaceTextBox.Text;
                 AppData.SaveConfig();
             }
+
             CodeGenerator.Generate(AppData.TargetNamespace, fbsFileNames, AppData.IsGeneratePoolVersion);
         }
 
