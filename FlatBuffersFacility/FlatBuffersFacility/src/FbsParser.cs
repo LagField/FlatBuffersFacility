@@ -110,8 +110,8 @@ namespace FlatBuffersFacility.Parser
 
                 //这里使用正则表达式寻找，因为fbs允许多个field写在一行
                 //find pattern: fieldname:typename; or fieldname:[typename]; ;
-                const string fieldPattern = @"[a-zA-Z_][a-zA-Z0-9_]+ *: *([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+;";
-                const string arrayFieldPattern = @"[a-zA-Z_][a-zA-Z0-9_]+ *: *\[([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+ *\] *;";
+                const string fieldPattern = @"[a-zA-Z0-9_]+ *: *([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+;";
+                const string arrayFieldPattern = @"[a-zA-Z0-9_]+ *: *\[([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+ *\] *;";
                 MatchCollection fieldMatchCollection = Regex.Matches(line, fieldPattern);
                 MatchCollection arrayFieldMatchCollection = Regex.Matches(line, arrayFieldPattern);
                 int fieldCount = fieldMatchCollection.Count;

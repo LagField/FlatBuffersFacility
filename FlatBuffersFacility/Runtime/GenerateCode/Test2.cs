@@ -3,7 +3,7 @@ using FlatBuffers;
 
 namespace Game_WebProtocol.FB_WebProtocol2
 {
-    public class Weapon
+    public class Weapon : FlatBuffersFacility.PoolObject
     {
         public int id;
         public string name = "";
@@ -19,6 +19,13 @@ namespace Game_WebProtocol.FB_WebProtocol2
         {
             global::FB_WebProtocol2.Weapon source = global::FB_WebProtocol2.Weapon.GetRootAsWeapon(bb);
             Game_WebProtocolConvertMethods.Decode(this, source);
+        }
+
+        public override void Release()
+        {
+            id = 0;
+            name = "";
+            ammo_capacity = 0;
         }
     }
 

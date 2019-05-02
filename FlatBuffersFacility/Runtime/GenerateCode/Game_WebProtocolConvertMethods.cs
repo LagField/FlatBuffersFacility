@@ -22,18 +22,26 @@ namespace Game_WebProtocol
             {
                 drivenCarOffset = Encode(source.drivenCar,fbb);
             }
-            Offset<global::FB_WebProtocol.Car>[] ownCarsOffsets = new Offset<global::FB_WebProtocol.Car>[source.ownCars.Count];
+            for (int i = 0; i < source.ownCars.Count; i++)
+            {
+                source.ownCarsOffsetList.Add(Encode(source.ownCars[i],fbb));
+            }
+            global::FB_WebProtocol.Enemy.StartOwnCarsVector(fbb,source.ownCars.Count);
             for (int i = source.ownCars.Count - 1; i >= 0; i--)
             {
-                ownCarsOffsets[i] = Encode(source.ownCars[i],fbb);
+                fbb.AddOffset(source.ownCarsOffsetList[i].Value);
             }
-            VectorOffset ownCarsOffset = global::FB_WebProtocol.Enemy.CreateOwnCarsVector(fbb, ownCarsOffsets);
-            StringOffset[] all_namesOffsets = new StringOffset[source.all_names.Count];
+            VectorOffset ownCarsOffset = fbb.EndVector();
+            for (int i = 0; i < source.all_names.Count; i++)
+            {
+                source.all_namesOffsetList.Add(fbb.CreateString(source.all_names[i]));
+            }
+            global::FB_WebProtocol.Enemy.StartAllNamesVector(fbb,source.all_names.Count);
             for (int i = source.all_names.Count - 1; i >= 0; i--)
             {
-                all_namesOffsets[i] = fbb.CreateString(source.all_names[i]);
+                fbb.AddOffset(source.all_namesOffsetList[i].Value);
             }
-            VectorOffset all_namesOffset = global::FB_WebProtocol.Enemy.CreateAllNamesVector(fbb, all_namesOffsets);
+            VectorOffset all_namesOffset = fbb.EndVector();
             Offset<global::FB_WebProtocol2.Weapon> weaponOffset  = new Offset<global::FB_WebProtocol2.Weapon>();
             if(source.weapon != null)
             {
@@ -69,12 +77,12 @@ namespace Game_WebProtocol
             }
             if (source.DrivenCar.HasValue)
             {
-                destination.drivenCar = new FB_WebProtocol.Car();
+                destination.drivenCar = FlatBuffersFacility.Pool.Get<FB_WebProtocol.Car>();
                 Decode(destination.drivenCar,source.DrivenCar.Value);
             }
             for (int i = 0; i < source.OwnCarsLength; i++)
             {
-                Car newCar = new FB_WebProtocol.Car();
+                Car newCar = FlatBuffersFacility.Pool.Get<FB_WebProtocol.Car>();
                 Decode(newCar,source.OwnCars(i).Value);
                 destination.ownCars.Add(newCar);
             }
@@ -84,14 +92,29 @@ namespace Game_WebProtocol
             }
             if (source.Weapon.HasValue)
             {
-                destination.weapon = new FB_WebProtocol2.Weapon();
+                destination.weapon = FlatBuffersFacility.Pool.Get<FB_WebProtocol2.Weapon>();
                 Decode(destination.weapon,source.Weapon.Value);
             }
             if (source.Weapon2.HasValue)
             {
-                destination.weapon2 = new FB_WebProtocol.Weapon();
+                destination.weapon2 = FlatBuffersFacility.Pool.Get<FB_WebProtocol.Weapon>();
                 Decode(destination.weapon2,source.Weapon2.Value);
             }
+        }
+
+        public static Offset<global::FB_WebProtocol.Vec3> Encode(Game_WebProtocol.FB_WebProtocol.Vec3 source, FlatBufferBuilder fbb)
+        {
+            global::FB_WebProtocol.Vec3.StartVec3(fbb);
+            global::FB_WebProtocol.Vec3.AddX(fbb,source.x);
+            global::FB_WebProtocol.Vec3.AddY(fbb,source.y);
+            global::FB_WebProtocol.Vec3.AddZ(fbb,source.z);
+            return global::FB_WebProtocol.Vec3.EndVec3(fbb);
+        }
+         public static void Decode(Game_WebProtocol.FB_WebProtocol.Vec3 destination, global::FB_WebProtocol.Vec3 source)
+        {
+            destination.x = source.X;
+            destination.y = source.Y;
+            destination.z = source.Z;
         }
 
         public static Offset<global::FB_WebProtocol.Car> Encode(Game_WebProtocol.FB_WebProtocol.Car source, FlatBufferBuilder fbb)

@@ -30,7 +30,6 @@ namespace FlatBuffersFacility
             base.OnClosed(e);
 
             AppData.TargetNamespace = namespaceTextBox.Text;
-            AppData.IsGeneratePoolVersion = generatePoolVersionCheckBox.Checked.Value;
             AppData.SaveConfig();
         }
 
@@ -182,6 +181,11 @@ namespace FlatBuffersFacility
             layout.Rows.Add(namespaceInputLayout);
 
             generatePoolVersionCheckBox = new CheckBox {Text = "生成对象池版本", Checked = AppData.IsGeneratePoolVersion};
+            generatePoolVersionCheckBox.DataContextChanged += (sender, args) =>
+            {
+                AppData.IsGeneratePoolVersion = generatePoolVersionCheckBox.Checked.Value;
+                AppData.SaveConfig();
+            };
             TableLayout miscLayout = new TableLayout();
             miscLayout.Rows.Add(new TableRow {Cells = {new TableCell {Control = generatePoolVersionCheckBox}}});
             layout.Rows.Add(miscLayout);
@@ -207,7 +211,12 @@ namespace FlatBuffersFacility
                 return;
             }
 
-            CodeGenerator.Generate(namespaceTextBox.Text, fbsFileNames, generatePoolVersionCheckBox.Checked.Value);
+            if (AppData.TargetNamespace != namespaceTextBox.Text)
+            {
+                AppData.TargetNamespace = namespaceTextBox.Text;
+                AppData.SaveConfig();
+            }
+            CodeGenerator.Generate(AppData.TargetNamespace, fbsFileNames, AppData.IsGeneratePoolVersion);
         }
 
         private void OnOpenCSharpDirectoryBtnClick(object sender, EventArgs e)

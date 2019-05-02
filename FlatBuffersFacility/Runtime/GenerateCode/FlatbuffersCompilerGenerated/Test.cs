@@ -94,6 +94,40 @@ public struct Enemy : IFlatbufferObject
   }
 };
 
+public struct Vec3 : IFlatbufferObject
+{
+  private Table __p;
+  public ByteBuffer ByteBuffer { get { return __p.bb; } }
+  public static Vec3 GetRootAsVec3(ByteBuffer _bb) { return GetRootAsVec3(_bb, new Vec3()); }
+  public static Vec3 GetRootAsVec3(ByteBuffer _bb, Vec3 obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
+  public void __init(int _i, ByteBuffer _bb) { __p.bb_pos = _i; __p.bb = _bb; }
+  public Vec3 __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
+
+  public float X { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public float Y { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public float Z { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+
+  public static Offset<Vec3> CreateVec3(FlatBufferBuilder builder,
+      float x = 0.0f,
+      float y = 0.0f,
+      float z = 0.0f) {
+    builder.StartObject(3);
+    Vec3.AddZ(builder, z);
+    Vec3.AddY(builder, y);
+    Vec3.AddX(builder, x);
+    return Vec3.EndVec3(builder);
+  }
+
+  public static void StartVec3(FlatBufferBuilder builder) { builder.StartObject(3); }
+  public static void AddX(FlatBufferBuilder builder, float x) { builder.AddFloat(0, x, 0.0f); }
+  public static void AddY(FlatBufferBuilder builder, float y) { builder.AddFloat(1, y, 0.0f); }
+  public static void AddZ(FlatBufferBuilder builder, float z) { builder.AddFloat(2, z, 0.0f); }
+  public static Offset<Vec3> EndVec3(FlatBufferBuilder builder) {
+    int o = builder.EndObject();
+    return new Offset<Vec3>(o);
+  }
+};
+
 public struct Car : IFlatbufferObject
 {
   private Table __p;

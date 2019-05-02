@@ -1,0 +1,23 @@
+namespace FlatBuffersProtocol;
+
+table Enemy  
+{
+    id : int;
+    position : Vec3;
+    inventoryIds : [int];
+    weapon : Weapon;
+    teamId : int;
+}
+
+table Vec3
+{
+    x : float;
+    y : float;
+    z : float;
+}
+
+table Weapon
+{
+    id : int;
+    ammo_capacity : int;
+}
