@@ -48,20 +48,13 @@ namespace FlatBuffersFacility
 
         #region 左侧文件复选框
 
-        private List<CheckBox> fbsFileCheckBoxList;
+        private string[] fbsFileNames;
 
         private TableLayout ConstructFbsFilePickerLayout()
         {
-            if (fbsFileCheckBoxList == null)
-            {
-                fbsFileCheckBoxList = new List<CheckBox>();
-            }
-
-            fbsFileCheckBoxList.Clear();
-
             TableLayout layout = new TableLayout();
 
-            string[] fbsFileNames = GetFbsFileNamesInDirectory(AppData.FbsDirectory);
+            fbsFileNames = GetFbsFileNamesInDirectory(AppData.FbsDirectory);
 
             if (fbsFileNames != null && fbsFileNames.Length > 0)
             {
@@ -69,13 +62,12 @@ namespace FlatBuffersFacility
                 scrollable.Height = 300;
 
                 TableLayout scrollContentLayout = new TableLayout();
+                scrollContentLayout.Spacing = new Size(30, 10);
                 for (int i = 0; i < fbsFileNames.Length; i++)
                 {
                     string fileName = fbsFileNames[i];
-                    CheckBox fileCheckBox = new CheckBox {Text = fileName};
-                    scrollContentLayout.Rows.Add(fileCheckBox);
-
-                    fbsFileCheckBoxList.Add(fileCheckBox);
+                    Label fileNameLabel = new Label {Text = fileName, Width = 200};
+                    scrollContentLayout.Rows.Add(fileNameLabel);
                 }
 
                 scrollContentLayout.Rows.Add(new TableRow {ScaleHeight = true});
@@ -87,26 +79,8 @@ namespace FlatBuffersFacility
                 Button refreshButton = new Button {Text = "刷新"};
                 refreshButton.Click += (sender, args) => { ReConstructWindowLayout(); };
 
-                Button selectAllButton = new Button {Text = "全选"};
-                selectAllButton.Click += (sender, args) =>
-                {
-                    for (int i = 0; i < fbsFileCheckBoxList.Count; i++)
-                    {
-                        fbsFileCheckBoxList[i].Checked = true;
-                    }
-                };
-
-                Button disSelectAllButton = new Button {Text = "取消全选"};
-                disSelectAllButton.Click += (sender, args) =>
-                {
-                    for (int i = 0; i < fbsFileCheckBoxList.Count; i++)
-                    {
-                        fbsFileCheckBoxList[i].Checked = false;
-                    }
-                };
-
                 TableLayout fileButtonLayout = new TableLayout {Spacing = new Size(10, 10)};
-                fileButtonLayout.Rows.Add(new TableRow {Cells = {refreshButton, selectAllButton, disSelectAllButton}});
+                fileButtonLayout.Rows.Add(new TableRow {Cells = {refreshButton}});
                 layout.Rows.Add(fileButtonLayout);
             }
             else
@@ -207,12 +181,9 @@ namespace FlatBuffersFacility
             });
             layout.Rows.Add(namespaceInputLayout);
 
-            generatePoolVersionCheckBox = new CheckBox {Text = "生成对象池版本",Checked = AppData.IsGeneratePoolVersion};
+            generatePoolVersionCheckBox = new CheckBox {Text = "生成对象池版本", Checked = AppData.IsGeneratePoolVersion};
             TableLayout miscLayout = new TableLayout();
-            miscLayout.Rows.Add(new TableRow
-            {
-                Cells = {new TableCell {Control = generatePoolVersionCheckBox}}
-            });
+            miscLayout.Rows.Add(new TableRow {Cells = {new TableCell {Control = generatePoolVersionCheckBox}}});
             layout.Rows.Add(miscLayout);
 
             //generate button
@@ -231,23 +202,12 @@ namespace FlatBuffersFacility
 
         private void GenerateCodes(object sender, EventArgs e)
         {
-            if (fbsFileCheckBoxList.Count == 0)
+            if (fbsFileNames.Length == 0)
             {
                 return;
             }
 
-            List<string> selectFbsFileNameList = new List<string>();
-            for (int i = 0; i < fbsFileCheckBoxList.Count; i++)
-            {
-                CheckBox cb = fbsFileCheckBoxList[i];
-                if (cb.Checked.HasValue && cb.Checked.Value)
-                {
-                    selectFbsFileNameList.Add(cb.Text);
-                }
-            }
-
-            CodeGenerator.Generate(namespaceTextBox.Text, selectFbsFileNameList.ToArray(),
-                generatePoolVersionCheckBox.Checked.Value);
+            CodeGenerator.Generate(namespaceTextBox.Text, fbsFileNames, generatePoolVersionCheckBox.Checked.Value);
         }
 
         private void OnOpenCSharpDirectoryBtnClick(object sender, EventArgs e)
@@ -263,7 +223,9 @@ namespace FlatBuffersFacility
         private void OnSelectCSharpDirectoryBtnClick(object sender, EventArgs e)
         {
             SelectFolderDialog selectFolderDialog = new SelectFolderDialog
-                {Title = "选择csharp输出文件夹", Directory = AppData.CsOutputDirectory};
+            {
+                Title = "选择csharp输出文件夹", Directory = AppData.CsOutputDirectory
+            };
             if (selectFolderDialog.ShowDialog(this) == DialogResult.Ok)
             {
                 AppData.CsOutputDirectory = selectFolderDialog.Directory;
@@ -324,7 +286,9 @@ namespace FlatBuffersFacility
         private void OnSelectFbsDirectoryBtnClick(object sender, EventArgs e)
         {
             SelectFolderDialog selectFolderDialog = new SelectFolderDialog
-                {Title = "选择.fbs文件夹", Directory = AppData.FbsDirectory};
+            {
+                Title = "选择.fbs文件夹", Directory = AppData.FbsDirectory
+            };
             if (selectFolderDialog.ShowDialog(this) == DialogResult.Ok)
             {
                 AppData.FbsDirectory = selectFolderDialog.Directory;
