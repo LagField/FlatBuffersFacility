@@ -11,9 +11,15 @@ namespace FB_WebProtocol;
     ownCars:[Car];
     all_names:[string];
     weapon:FB_WebProtocol2.Weapon;
+    weapon2:Weapon;
 }
 
 table Car{
     id:int32;
     speed:float;
+}
+
+table Weapon{
+    id:int32;
+    wtf:string;
 }

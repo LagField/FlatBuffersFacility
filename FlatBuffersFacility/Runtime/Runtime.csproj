@@ -46,6 +46,11 @@
     <Compile Include="FlatBuffersSrc\Offset.cs" />
     <Compile Include="FlatBuffersSrc\Struct.cs" />
     <Compile Include="FlatBuffersSrc\Table.cs" />
+    <Compile Include="GenerateCode\FlatbuffersCompilerGenerated\Test.cs" />
+    <Compile Include="GenerateCode\FlatbuffersCompilerGenerated\Test2.cs" />
+    <Compile Include="GenerateCode\Game_WebProtocolConvertMethods.cs" />
+    <Compile Include="GenerateCode\Test.cs" />
+    <Compile Include="GenerateCode\Test2.cs" />
     <Compile Include="Pool.cs" />
     <Compile Include="PoolObject.cs" />
     <Compile Include="Program.cs" />
@@ -57,9 +62,6 @@
     <Content Include="FbsFiles\flatc.exe" />
     <Content Include="FbsFiles\Test.fbs" />
     <Content Include="FbsFiles\Test2.fbs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GenerateCode" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -31,8 +31,8 @@ namespace FlatBuffersFacility.Parser
             }
 
             fbsStructure.tableStructures = tableStructureList.ToArray();
-            Debug.WriteLine(fbsStructure.ToString());
-
+//            Debug.WriteLine(fbsStructure.ToString());
+            ProcessTableAndFieldNamespace(fbsStructure);
             return fbsStructure;
         }
 
@@ -192,6 +192,32 @@ namespace FlatBuffersFacility.Parser
             throw new ParseFileException {errorMessage = "解析文件出错，格式不正确"};
         }
 
+        private void ProcessTableAndFieldNamespace(FbsStructure fbsStructure)
+        {
+            string targetNamespace = AppData.TargetNamespace;
+            string namespaceName = fbsStructure.namespaceName;
+            for (int i = 0; i < fbsStructure.tableStructures.Length; i++)
+            {
+                TableStructure tableStructure = fbsStructure.tableStructures[i];
+                if (string.IsNullOrEmpty(namespaceName))
+                {
+                    tableStructure.tableNameWithNamespace = $"global::{tableStructure.tableName}";
+                    tableStructure.tableNameWithCSharpNamespace = $"{targetNamespace}.{tableStructure.tableName}";
+                }
+                else
+                {
+                    tableStructure.tableNameWithNamespace = $"global::{namespaceName}.{tableStructure.tableName}";
+                    tableStructure.tableNameWithCSharpNamespace = $"{targetNamespace}.{namespaceName}.{tableStructure.tableName}";
+                }
+                for (int j = 0; j < tableStructure.fieldInfos.Length; j++)
+                {
+                    TableFieldInfo fieldInfo = tableStructure.fieldInfos[j];
+                    fieldInfo.fieldTypeNameWithNameSpace =
+                        ConvertToCSharpTypeNameWithNamespaceName(fieldInfo.fieldTypeName, namespaceName);
+                }
+            }
+        }
+
         public static readonly Dictionary<string, string> CsharpTypeNameConvertDic = new Dictionary<string, string>
         {
             {"int32", "int"},
@@ -236,6 +262,27 @@ namespace FlatBuffersFacility.Parser
             return !CsharpTypeNameConvertDic.TryGetValue(originName, out string typeName) ? originName : typeName;
         }
 
+        private string ConvertToCSharpTypeNameWithNamespaceName(string originTypeName, string namespaceName)
+        {
+            //如果类型带着.,则.之前的部分就是类型的命名空间
+            if (originTypeName.Contains("."))
+            {
+                return originTypeName;
+            }
+
+            if (CheckFlatbuffersTypeIsScalarType(originTypeName))
+            {
+                return originTypeName;
+            }
+
+            if (string.IsNullOrEmpty(namespaceName))
+            {
+                return $"{ConvertToCSharpTypeName(originTypeName)}";
+            }
+
+            return $"{namespaceName}.{ConvertToCSharpTypeName(originTypeName)}";
+        }
+
         private bool CheckFlatbuffersTypeIsScalarType(string typeName)
         {
             return ScalarTypeNameSet.Contains(typeName);
@@ -270,16 +317,9 @@ namespace FlatBuffersFacility.Parser
 
         public string ValidNameSpaceName
         {
-            get
-            {
-                if (string.IsNullOrEmpty(namespaceName))
-                {
-                    return "global::";
-                }
-
-                return $"global::{namespaceName}.";
-            }
+            get { return $"global::{namespaceName}."; }
         }
+
         public TableStructure[] tableStructures;
 
         public override string ToString()
@@ -301,6 +341,8 @@ namespace FlatBuffersFacility.Parser
     public class TableStructure
     {
         public string tableName;
+        public string tableNameWithNamespace;//带着flatbuffers compiler生成代码的命名空间
+        public string tableNameWithCSharpNamespace;//带着我们生成代码的命名空间
         public TableFieldInfo[] fieldInfos;
 
         public override string ToString()
@@ -330,16 +372,25 @@ namespace FlatBuffersFacility.Parser
         /// flatbuffers compiler会将任何field名称转换为upper camel case
         /// </summary>
         public string upperCamelCaseFieldName;
+
         /// <summary>
         /// field类型，如果是数组，则记录的是数组元素的类型
         /// </summary>
         public string fieldTypeName;
+
         /// <summary>
         /// <see cref="fieldTypeName"/>的csharp类型版本，主要就是处理了基础类型flatbuffers和c#名称不一致的问题
         /// </summary>
         public string fieldCSharpTypeName;
+
+        /// <summary>
+        /// c#类型，并带着自己的命名空间名字
+        /// </summary>
+        public string fieldTypeNameWithNameSpace;
+
         public bool isArray;
         public bool isScalarType;
+
         /// <summary>
         ///  如果field是数组类型，则肯定<see cref="isScalarType"/>是false，但是数组元素有可能是scalar类型。
         /// </summary>
